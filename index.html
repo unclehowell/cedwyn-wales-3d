@@ -7,14 +7,14 @@
 <meta name="description" content="A 3D model of Llandough and Leckwith built from Welsh Government LiDAR terrain, OpenStreetMap and the 1841 tithe parcels, with contour lines, real sun and sky.">
 <meta name="theme-color" content="#1b2330">
 <script type="importmap">{"imports":{"three":"https://cedwyn.bucklerfamily.estate/_ext/cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cedwyn.bucklerfamily.estate/_ext/cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-<link rel="stylesheet" href="wales-3d.css?v=0.3.3"><script>window.__cedwynLP="/wales/"</script><script src="/_cedwyn/ghf/ghf-boot.js?v=2.1.8"></script>
+<link rel="stylesheet" href="wales-3d.css?v=0.4.0"><script>window.__cedwynLP="/wales/"</script><script src="/_cedwyn/ghf/ghf-boot.js?v=2.1.8"></script>
 </head>
 <body class="w3d">
 <main class="w3dw" data-scope="wales online">
-<div id="w3d" data-version="0.3.3">
+<div id="w3d" data-version="0.4.0">
   <canvas id="w3dc" aria-label="3D view of Llandough and Leckwith"></canvas>
   <div id="w3dtop">
-    <span id="w3dttl">Llandough &amp; Leckwith in 3D</span>
+    <span id="w3dttl" role="group" aria-label="Show or hide"><button id="tgh3" class="tg" type="button" aria-pressed="true" title="Show or hide the Uber H3 cells">Uber H3</button><button id="tgbld" class="tg" type="button" aria-pressed="true" title="Show or hide the buildings">buildings</button></span>
     <details id="w3dctl"><summary>Layers</summary>
       <div class="row"><b>Era</b>
         <label><input type="radio" name="era" value="today" checked> Today</label>
@@ -26,8 +26,8 @@
         <button id="now" type="button">Now</button></div>
       <div class="row"><b>Relief</b> <input type="range" id="vex" min="1" max="3" step="0.25" value="1"> <span id="vexv">×1</span></div>
       <div class="row"><button id="snd" type="button" aria-pressed="false">Sound off</button></div>
-      <div class="row"><label><input type="checkbox" id="h3on" checked> H3 cells</label>
-        <select id="h3res" aria-label="H3 resolution"><option value="10">res 10</option><option value="11" selected>res 11</option><option value="12">res 12 (in parcels)</option></select></div>
+      <div class="row"><b>Uber H3</b> <select id="h3res" aria-label="Uber H3 resolution"><option value="14" selected>res 14</option><option value="15">res 15</option></select>
+        <span class="small">cells round the view centre</span></div>
       <div class="row"><label><input type="checkbox" id="paron" checked> Cedwyn estate plan parcels</label></div>
       <details id="pbox" class="row"><summary>Parcels (59)</summary>
         <div class="pbtn"><button id="pall" type="button">All</button><button id="pnone" type="button">None</button></div>
@@ -44,11 +44,11 @@
   <footer id="w3dcred"><details><summary>Data: Welsh Government LiDAR · OpenStreetMap · 1841 tithe · H3</summary>
     Terrain and tree heights: Welsh Government LiDAR 2020–22, 1 m DTM and DSM (DataMapWales), Open Government Licence v3.0, © Crown copyright.
     Buildings, roads, rivers and woodland: © OpenStreetMap contributors, ODbL. Building heights from LiDAR where OpenStreetMap has none.
-    1841 layer: parcels of the David Stewart estate plan traced through the 1841 Llandough tithe map (Tithe H3). Parcels and H3 cells (Uber H3, Apache 2.0) from the Tithe H3 section. Sun position from the date and time at Llandough; the view is always clear. Rendering: three.js (MIT).
+    1841 layer: parcels of the David Stewart estate plan traced through the 1841 Llandough tithe map (Tithe H3). Parcels from the Tithe H3 section. H3 cells at resolution 14 and 15 (Uber H3, Apache 2.0) are computed in the browser with h3-js 4.1.0 (Apache 2.0) round the view centre. Sun position from the date and time at Llandough; the view is always clear. Rendering: three.js (MIT).
     Contours are drawn from the LiDAR terrain every 2 m, bold every 10 m. Heights are metres above Ordnance Datum (Newlyn).
   </details></footer>
 </div>
 </main>
-<script type="module" src="wales-3d.js?v=0.3.3"></script>
+<script type="module" src="wales-3d.js?v=0.4.0"></script>
 </body>
 </html>
