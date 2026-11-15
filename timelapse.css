@@ -157,3 +157,9 @@
  #tlmodal .tlst{font-size:11px;margin:2px 0 3px}
  #tlmodal .tleventdetails>summary{min-height:34px;font-size:13px}
 }
+
+/* v0.7.0 — land-wide chronology and AI narrator status */
+.tlnarrationstatus{grid-column:span 2;display:block;color:#cad7e7;font-size:12px;line-height:1.35;padding:2px 3px}
+#tlmodal .tld{line-height:1.35}
+#tlmodal .tlch{line-height:1.4}
+@media(max-width:700px){.tlnarrationstatus{font-size:12px;padding:3px 1px}}
