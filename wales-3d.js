@@ -1,4 +1,4 @@
-// Wales 3D world v0.3.0 — Llandough / Leckwith / the Cedwyn estate on real LiDAR terrain. 
+// Wales 3D world v0.5.0 (v0.5.0: 1877–present timelapse hooks: window.__w3d, ovl.custom, world.gate) — Llandough / Leckwith / the Cedwyn estate on real LiDAR terrain. 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Sky } from './vendor/Sky.js?v=0.160.0';
@@ -353,7 +353,8 @@ function h3Count(p, res) { // exact count of res-N cells whose centres fall insi
   h3cnt.set(k, n); return n;
 }
 function applyBld() {
-  if (world.buildings) { world.buildings.mesh.visible = state.bld; if (world.buildings.keepMesh) world.buildings.keepMesh.visible = state.bld; }
+  const on = state.bld && world.gate !== false; // v0.5.0: the timelapse (timelapse.js) gates the modern buildings by year
+  if (world.buildings) { world.buildings.mesh.visible = on; if (world.buildings.keepMesh) world.buildings.keepMesh.visible = on; }
 }
 function syncToggles() {
   const a = $('#tgh3'), b = $('#tgbld'); if (a) a.setAttribute('aria-pressed', String(state.h3)); if (b) b.setAttribute('aria-pressed', String(state.bld));
@@ -368,6 +369,7 @@ function drawOverlay() {
   const [bx, bz, bw, bh] = ovl.box, S = ovl.canvas.width, g = ovl.canvas.getContext('2d');
   const sx = S / bw, sz = S / bh, X = x => (x - bx) * sx, Y = z => (z - bz) * sz;
   g.clearRect(0, 0, S, S);
+  if (ovl.custom) { ovl.custom(g, X, Y, S); ovl.tex.needsUpdate = true; terrainMat.uniforms.oOn.value = 1; return; } // v0.5.0: timelapse draws the family parcels for the year
   const path = r => { g.beginPath(); r.forEach(([x, z], i) => i ? g.lineTo(X(x), Y(z)) : g.moveTo(X(x), Y(z))); g.closePath(); };
   if (state.parcels) ovl.data.parcels.forEach((p, i) => { if (!p.rings || state.hidden.has(p.id)) return;
     p.rings.forEach(r => { path(r); g.fillStyle = parcelColour(i, state.sel === p.id ? 0.62 : 0.42); g.fill(); }); });
@@ -647,5 +649,9 @@ let backend;
     $('#w3dload').classList.add('done'); perf.loadMs = Math.round(performance.now() - t0);
     perf.buildings = wj.buildings.length; perf.trees = world.trees.count; perf.shrubs = world.shrubs.count;
     requestAnimationFrame(frame);
+    // v0.5.0: hand the live scene to the timelapse (timelapse.js)
+    window.__w3d = { THREE, scene, camera, controls, state, ovl, world, hAt, llToXZ, flyTo, views, drawOverlay, applyBld, perf };
+    window.dispatchEvent(new CustomEvent('w3d:ready'));
   } catch (err) { console.error(err); $('#w3dload').textContent = 'The 3D view could not start on this device: ' + (err.message || err); window.__w3derr = String(err && err.stack || err); }
 })();
+
