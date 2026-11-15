@@ -1,5 +1,4 @@
-// Cedwyn Wales 3D timelapse neural voice service.
-// Whitelisted event IDs only; server-side audio is cached to avoid repeated synthesis.
+// Cedwyn Wales 3D timelapse ElevenLabs v3 neural narration endpoint.
 const EVENT_TITLES = {
   "e1535":"1535 · Tewkesbury Abbey and the manorial lordship",
   "e1543":"1543 · the Crown grants the manorial interest",
@@ -8,11 +7,11 @@ const EVENT_TITLES = {
   "e1667":"1667 · the Williams family at Tŷ Mawr",
   "e1767":"By 1767 · the manor passes to Hurst and Jones",
   "e1793":"1793 · the Earl of Bute acquires the manorial lordship",
-  "e1824":"1824 · plan 19 names “Cedfin or Ty Mawr Farm”",
+  "e1824":"1824 · plan 19 names Cedfin or Ty Mawr Farm",
   "e1841":"1841 · John Williams occupies 36 parcels across Llandough and Leckwith",
   "e1877":"1877 · the farm is divided into Parcel A and Parcel B",
   "e1916":"1916 · a Bute yearly agricultural tenancy to the Williams family",
-  "e1926":"1926 · the remaining Bute estate is reorganised as Mountjoy Ltd",
+  "e1926":"1926 · the remaining Bute estate is reorganised as Mountjoy Limited",
   "e1928":"1928 · the last rent receipt and the family's freehold case for Parcel A",
   "e1938":"1938 · Parcel B is conveyed to Western Ground Rents",
   "e1939":"1939 · Western Ground Rents lets Parcel B to John Williams",
@@ -42,73 +41,78 @@ const EVENT_TITLES = {
   "e2005":"2005 · part of the north woodland is sold to Goldsworthy Homes",
   "now":"Today · several parcel and interest questions remain open"
 };
-const VOICE_ID = "6WwXjDDEMyNmFG95zycZ"; // Eldrin · Crisp British Baritone
+const VOICE_ID = "6WwXjDDEMyNmFG95zycZ";
 const MODEL = "elevenlabs/eleven-v3";
 const ALLOWED_ORIGINS = new Set([
   "https://feature-timelapse-1877-prese.cedwyn-wales-3d.pages.dev",
   "https://cedwyn-wales-3d.pages.dev"
 ]);
-const cors = origin => ({
-  "Access-Control-Allow-Origin": origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://feature-timelapse-1877-prese.cedwyn-wales-3d.pages.dev",
-  "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Vary": "Origin"
-});
+function headers(origin, extra={}) {
+  return {
+    "Access-Control-Allow-Origin": origin && ALLOWED_ORIGINS.has(origin) ? origin : "*",
+    "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Range",
+    "Access-Control-Expose-Headers": "Content-Type, Content-Length, X-Cedwyn-Voice, X-TTS-State",
+    "Cache-Control": "public, max-age=3600",
+    "Vary": "Origin",
+    ...extra
+  };
+}
+function json(data,status,origin) {
+  return Response.json(data,{status,headers:headers(origin,{"Cache-Control":"no-store"})});
+}
 export default {
   async fetch(request, env, ctx) {
-    const origin = request.headers.get("Origin") || "";
-    if (origin && !ALLOWED_ORIGINS.has(origin)) return new Response("Forbidden", { status: 403 });
-    const url = new URL(request.url);
-    if (request.method === "OPTIONS") return new Response(null, { headers: cors(origin) });
-    if (request.method === "GET" && url.pathname === "/health") {
-      return Response.json({ ok: true, model: MODEL, voice: "Eldrin", delivery: "neural TTS" }, { headers: cors(origin) });
+    const origin=request.headers.get("Origin")||"";
+    if(origin&&!ALLOWED_ORIGINS.has(origin)) return new Response("Forbidden",{status:403});
+    const url=new URL(request.url);
+    if(request.method==="OPTIONS") return new Response(null,{status:204,headers:headers(origin)});
+    if(request.method==="GET"&&url.pathname==="/health") {
+      return json({ok:true,model:MODEL,voice:"Eldrin · Crisp British Baritone",voice_id:VOICE_ID,ai_binding:!!env.AI,mode:"GET audio URL; play() can be started directly in a tap"},200,origin);
     }
-    if (request.method !== "POST" || url.pathname !== "/speak") return new Response("Not found", { status: 404 });
-    let body;
-    try { body = await request.json(); } catch { return new Response("Invalid JSON", { status: 400, headers: cors(origin) }); }
-    const id = typeof body.id === "string" ? body.id : "";
-    const text = EVENT_TITLES[id];
-    if (!text) return new Response("Unknown event", { status: 404, headers: cors(origin) });
-
-    const cacheKey = new Request("https://voice-cache.cedwyn.invalid/v1/" + encodeURIComponent(id) + "?voice=eldrin-v3");
-    const cached = await caches.default.match(cacheKey);
-    if (cached) {
-      const h = new Headers(cached.headers); Object.entries(cors(origin)).forEach(([k,v]) => h.set(k,v));
-      return new Response(cached.body, { status: 200, headers: h });
+    if(!["GET","HEAD","POST"].includes(request.method)||url.pathname!=="/speak") return new Response("Not found",{status:404});
+    let id=url.searchParams.get("id")||"";
+    if(request.method==="POST") {
+      try { const b=await request.json(); id=typeof b.id==="string"?b.id:id; }
+      catch { return json({error:"Invalid JSON"},400,origin); }
+    }
+    const text=EVENT_TITLES[id];
+    if(!text) return json({error:"Unknown event ID",received:id,valid:Object.keys(EVENT_TITLES)},404,origin);
+    const cacheKey=new Request("https://cedwyn-voice-cache.invalid/v2/"+encodeURIComponent(id)+"?voice=eldrin-v3");
+    const cached=await caches.default.match(cacheKey);
+    if(cached) {
+      const h=new Headers(cached.headers); h.set("Access-Control-Allow-Origin",origin||"*");
+      return new Response(cached.body,{status:cached.status,headers:h});
     }
     try {
-      const result = await env.AI.run(MODEL, {
+      const output=await env.AI.run(MODEL,{
         text,
-        voice_id: VOICE_ID,
-        language_code: "en",
-        output_format: "mp3_44100_128"
+        voice_id:VOICE_ID,
+        output_format:"mp3_44100_128",
+        language_code:"en"
       });
-      const audioData = result && (result.audio || (result.result && result.result.audio));
-      if (!audioData || typeof audioData !== "string") throw new Error("TTS model returned no audio");
-      let audioBytes;
-      if (audioData.startsWith("data:")) {
-        const comma = audioData.indexOf(",");
-        if (comma < 0) throw new Error("Malformed audio data URI");
-        const binary = atob(audioData.slice(comma + 1));
-        audioBytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) audioBytes[i] = binary.charCodeAt(i);
-      } else {
-        const audioResponse = await fetch(audioData);
-        if (!audioResponse.ok) throw new Error("Audio fetch failed: " + audioResponse.status);
-        audioBytes = await audioResponse.arrayBuffer();
+      const audio=(output&&output.result&&output.result.audio)||(output&&output.audio);
+      if(typeof audio!=="string"||!audio) {
+        console.error("ElevenLabs response without audio",JSON.stringify(output).slice(0,1200));
+        return json({error:"ElevenLabs did not return an audio URL",state:output&&output.state||"unknown"},502,origin);
       }
-      const headers = new Headers({
-        "Content-Type": "audio/mpeg",
-        "Cache-Control": "public, max-age=31536000, s-maxage=31536000",
-        "X-Cedwyn-Voice": "Eldrin · British baritone",
-        ...cors(origin)
-      });
-      const response = new Response(audioBytes, { headers });
-      ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+      let response;
+      if(audio.startsWith("data:")) {
+        const comma=audio.indexOf(",");
+        if(comma<0) throw new Error("Invalid data URI returned by TTS");
+        const bytes=Uint8Array.from(atob(audio.slice(comma+1)),c=>c.charCodeAt(0));
+        response=new Response(bytes,{status:200,headers:headers(origin,{"Content-Type":"audio/mpeg","Content-Length":String(bytes.byteLength),"X-Cedwyn-Voice":"Eldrin","X-TTS-State":"Completed"})});
+      } else {
+        const audioUrl=new URL(audio);
+        if(audioUrl.protocol!=="https:") throw new Error("Unexpected non-HTTPS audio URL");
+        response=new Response(null,{status:302,headers:headers(origin,{"Location":audioUrl.href,"X-Cedwyn-Voice":"Eldrin","X-TTS-State":output.state||"Completed"})});
+      }
+      ctx.waitUntil(caches.default.put(cacheKey,response.clone()));
+      if(request.method==="HEAD") return new Response(null,{status:response.status,headers:response.headers});
       return response;
-    } catch (error) {
-      console.error("Timelapse voice generation failed", error);
-      return new Response("Narration generation failed", { status: 502, headers: cors(origin) });
+    } catch(error) {
+      console.error("ElevenLabs v3 narration failed",error);
+      return json({error:String(error&&error.message||error),model:MODEL,voice_id:VOICE_ID},502,origin);
     }
   }
 };
