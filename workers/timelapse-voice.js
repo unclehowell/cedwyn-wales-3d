@@ -41,8 +41,8 @@ const EVENT_TITLES = {
   "e2005":"2005 · part of the north woodland is sold to Goldsworthy Homes",
   "now":"Today · several parcel and interest questions remain open"
 };
-const VOICE_ID = "6WwXjDDEMyNmFG95zycZ";
-const MODEL = "elevenlabs/eleven-v3";
+const MODEL = "@cf/deepgram/aura-1";
+const SPEAKER = "helios";
 const ALLOWED_ORIGINS = new Set([
   "https://feature-timelapse-1877-prese.cedwyn-wales-3d.pages.dev",
   "https://cedwyn-wales-3d.pages.dev"
@@ -52,8 +52,8 @@ function headers(origin, extra={}) {
     "Access-Control-Allow-Origin": origin && ALLOWED_ORIGINS.has(origin) ? origin : "*",
     "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Range",
-    "Access-Control-Expose-Headers": "Content-Type, Content-Length, X-Cedwyn-Voice, X-TTS-State",
-    "Cache-Control": "public, max-age=3600",
+    "Access-Control-Expose-Headers": "Content-Type, Content-Length, X-Cedwyn-Voice, X-TTS-Model",
+    "Cache-Control": "public, max-age=31536000",
     "Vary": "Origin",
     ...extra
   };
@@ -68,7 +68,14 @@ export default {
     const url=new URL(request.url);
     if(request.method==="OPTIONS") return new Response(null,{status:204,headers:headers(origin)});
     if(request.method==="GET"&&url.pathname==="/health") {
-      return json({ok:true,model:MODEL,voice:"Eldrin · Crisp British Baritone",voice_id:VOICE_ID,ai_binding:!!env.AI,mode:"GET audio URL; play() can be started directly in a tap"},200,origin);
+      return json({
+        ok:true,
+        model:MODEL,
+        voice:"Helios · male · British / UK English",
+        speaker:SPEAKER,
+        ai_binding:!!env.AI,
+        mode:"Cloudflare Workers AI audio response; directly playable from a tap"
+      },200,origin);
     }
     if(!["GET","HEAD","POST"].includes(request.method)||url.pathname!=="/speak") return new Response("Not found",{status:404});
     let id=url.searchParams.get("id")||"";
@@ -78,41 +85,44 @@ export default {
     }
     const text=EVENT_TITLES[id];
     if(!text) return json({error:"Unknown event ID",received:id,valid:Object.keys(EVENT_TITLES)},404,origin);
-    const cacheKey=new Request("https://cedwyn-voice-cache.invalid/v2/"+encodeURIComponent(id)+"?voice=eldrin-v3");
+    const cacheKey=new Request("https://cedwyn-voice-cache.invalid/v3/"+encodeURIComponent(id)+"?model=aura1-helios");
     const cached=await caches.default.match(cacheKey);
     if(cached) {
       const h=new Headers(cached.headers); h.set("Access-Control-Allow-Origin",origin||"*");
       return new Response(cached.body,{status:cached.status,headers:h});
     }
     try {
-      const output=await env.AI.run(MODEL,{
+      const result=await env.AI.run(MODEL,{
         text,
-        voice_id:VOICE_ID,
-        output_format:"mp3_44100_128",
-        language_code:"en"
+        speaker:SPEAKER,
+        encoding:"mp3"
+      },{returnRawResponse:true});
+      if(!(result instanceof Response)) throw new Error("Workers AI did not return a raw audio Response");
+      if(!result.ok) {
+        const detail=(await result.clone().text()).slice(0,1200);
+        console.error("Deepgram Aura TTS error",result.status,detail);
+        return json({error:"Workers AI TTS failed",status:result.status,detail},502,origin);
+      }
+      const contentType=result.headers.get("Content-Type")||"audio/mpeg";
+      if(!contentType.includes("audio")) {
+        const detail=(await result.clone().text()).slice(0,1200);
+        console.error("Deepgram Aura returned non-audio",contentType,detail);
+        return json({error:"TTS response was not audio",contentType,detail},502,origin);
+      }
+      const response=new Response(result.body,{
+        status:200,
+        headers:headers(origin,{
+          "Content-Type":contentType,
+          "X-Cedwyn-Voice":"Helios · British male",
+          "X-TTS-Model":MODEL
+        })
       });
-      const audio=(output&&output.result&&output.result.audio)||(output&&output.audio);
-      if(typeof audio!=="string"||!audio) {
-        console.error("ElevenLabs response without audio",JSON.stringify(output).slice(0,1200));
-        return json({error:"ElevenLabs did not return an audio URL",state:output&&output.state||"unknown"},502,origin);
-      }
-      let response;
-      if(audio.startsWith("data:")) {
-        const comma=audio.indexOf(",");
-        if(comma<0) throw new Error("Invalid data URI returned by TTS");
-        const bytes=Uint8Array.from(atob(audio.slice(comma+1)),c=>c.charCodeAt(0));
-        response=new Response(bytes,{status:200,headers:headers(origin,{"Content-Type":"audio/mpeg","Content-Length":String(bytes.byteLength),"X-Cedwyn-Voice":"Eldrin","X-TTS-State":"Completed"})});
-      } else {
-        const audioUrl=new URL(audio);
-        if(audioUrl.protocol!=="https:") throw new Error("Unexpected non-HTTPS audio URL");
-        response=new Response(null,{status:302,headers:headers(origin,{"Location":audioUrl.href,"X-Cedwyn-Voice":"Eldrin","X-TTS-State":output.state||"Completed"})});
-      }
       ctx.waitUntil(caches.default.put(cacheKey,response.clone()));
-      if(request.method==="HEAD") return new Response(null,{status:response.status,headers:response.headers});
+      if(request.method==="HEAD") return new Response(null,{status:200,headers:response.headers});
       return response;
     } catch(error) {
-      console.error("ElevenLabs v3 narration failed",error);
-      return json({error:String(error&&error.message||error),model:MODEL,voice_id:VOICE_ID},502,origin);
+      console.error("Deepgram Aura narration failed",error);
+      return json({error:String(error&&error.message||error),model:MODEL,speaker:SPEAKER},502,origin);
     }
   }
 };
