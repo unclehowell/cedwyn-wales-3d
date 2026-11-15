@@ -68,7 +68,7 @@
 #tlbar .tltick.dashed::after{background:repeating-linear-gradient(#ffd078 0 4px,transparent 4px 7px)}
 #tlbar .tltick.on::after{background:#fff;width:6px;left:9px}
 #tlbar .tltick:focus-visible{outline:2px solid #9cc7ff;outline-offset:1px}
-#tlends{position:absolute;left:0;right:0;top:-1px;display:flex;justify-content:space-between;font-size:12px;opacity:.88;pointer-events:none}
+#tlends{position:absolute;left:0;right:0;top:-1px;display:flex;justify-content:space-between;font-size:13px;opacity:.92;pointer-events:none}
 #tlmore{position:relative;justify-self:end}
 #tlmore>summary{list-style:none;cursor:pointer;border:1px solid #65748c;border-radius:8px;padding:0 10px;min-height:44px;display:flex;align-items:center;font-size:15px;font-weight:650;background:#2b3648;white-space:nowrap}
 #tlmore>summary::-webkit-details-marker{display:none}
@@ -131,6 +131,6 @@
  #tlbar{grid-template-columns:auto 4.5ch minmax(42px,1fr) auto;gap:4px}
  #tlplay{min-width:62px;font-size:14px}
  #tlyear{font-size:17px;min-width:4.5ch}
- #tlmore>summary{font-size:13px;padding:0 6px}
+ #tlmore>summary{font-size:14px;padding:0 6px}
 }
 @media(prefers-reduced-motion:reduce){#tlmodal .tlbar2{display:none}}
