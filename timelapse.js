@@ -410,5 +410,5 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
 
   window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
-  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; if (Q.get('tl') !== 'pause') setPlaying(true); }
+  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; if (Q.get('tl') !== 'pause') setPlaying(true); }
 })().catch(e => console.warn('timelapse:', e));
