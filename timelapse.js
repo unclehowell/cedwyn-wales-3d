@@ -142,7 +142,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function pointForParcel(id, slot, radius) {
     const p = polys.find(v => v.id === id) || polys[0];
-    const a = (slot || 0) * 2.399 + (radius ? 0.6 : 0), r = radius ? radius * (slot ? 6.2 : 2.4) : 0;
+    const a = (slot || 0) * 2.399 + (radius ? 0.6 : 0), r = radius ? radius * (slot ? 8 : 3) : 0;
     return [p.c[0] + Math.cos(a) * r, p.c[1] + Math.sin(a) * r];
   }
   function createSoldier(kind, parcelId, slot, holder, plant) {
@@ -165,7 +165,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     soldierMesh(group, soldierGeometry.pole, soldierMaterials.boots, 1.3, 4.25, -0.05);
     const flagGroup = new THREE.Group(); flagGroup.position.set(1.3, plant ? 4.3 : 6.1, -0.05); group.add(flagGroup);
     const flag = new THREE.Sprite(family ? flags.welsh : flags.union); flag.position.set(2.3, 0, 0); flag.scale.set(6.2, 3.9, 1); flagGroup.add(flag);
-    group.scale.setScalar(2.1);
+    group.scale.setScalar(3.0);
     const pos = pointForParcel(parcelId, slot, family ? 1 : 0);
     group.position.set(pos[0], W.hAt(pos[0], pos[1]) + (plant ? -1.2 : 0), pos[1]); soldierLayer.add(group);
     return { group, flag, flagGroup, kind, parcelId, holder, slot: slot || 0, targetId: parcelId,
@@ -306,8 +306,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'On the map: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short).join('; ') + '.'));
     if (e.sources && e.sources.length) { body.append(el('div', 'tld', 'Archive records')); const ul = el('ul');
       e.sources.forEach(s => { const li = el('li'), a = el('a', null, s.t); a.href = s.u; a.target = '_blank'; a.rel = 'noopener'; li.append(a); ul.append(li); }); body.append(ul); }
+    const nx = el('button', 'tlnext', 'Next event ▸'); nx.type = 'button'; nx.addEventListener('click', () => { dwell = 0.001; }); body.append(nx);
     detail.append(body); modal.append(detail);
-    const nx = el('button', 'tlnext', 'Next event ▸'); nx.type = 'button'; nx.addEventListener('click', () => { dwell = 0.001; }); modal.append(nx);
     bar2 = el('div', 'tlbar2'); modal.append(bar2);
   }
   function closeModal() { modal.hidden = true; modalIdx = -1; dwell = 0; }
