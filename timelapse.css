@@ -134,3 +134,10 @@
  #tlmore>summary{font-size:14px;padding:0 6px}
 }
 @media(prefers-reduced-motion:reduce){#tlmodal .tlbar2{display:none}}
+
+
+/* Keep the land key available inside the folded Options panel instead of over the map. */
+.tlmorebody #tllegend{position:static;grid-column:span 2;width:100%;max-width:none;background:rgba(255,255,255,.035);border:1px solid rgba(190,210,235,.2);box-shadow:none;padding:0}
+.tlmorebody #tllegend>summary{min-height:42px;padding:8px 10px;font-size:14px}
+.tlmorebody #tllegend .tllegendbody{max-height:28vh;padding:0 10px 9px}
+@media(max-width:700px){#tllegend{display:block}}
