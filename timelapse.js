@@ -341,11 +341,12 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.righteous.workers.dev/speak';
   const voiceAudio = el('audio'); voiceAudio.id = 'tlvoiceaudio'; voiceAudio.preload = 'none';
   voiceAudio.playsInline = true; voiceAudio.setAttribute('playsinline', ''); voiceAudio.setAttribute('webkit-playsinline', '');
-  voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; });
+  voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
   root.append(voiceAudio);
   const narrationStatus = el('small', 'tlnarrationstatus', 'Eldrin · British male AI voice');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
   hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Play the current event headline using the AI narrator';
+  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · Eldrin · British male AI voice'; });
   const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Turn automatic narration on or off';
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
@@ -397,7 +398,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       el('span', 'tlst', e.status === 'dashed' ? 'Reconstructed / source gap' + (e.reason ? ' · ' + e.reason : '') : 'Source record seen'));
     const hearEvent = el('button', 'tlhear', '🔊 Hear this headline'); hearEvent.type = 'button';
     hearEvent.addEventListener('click', () => { audioUnlocked = true; narrationOn = true; speakHeadline(e.id, true); });
-    modal.append(hearEvent);
+    modal.append(hearEvent, narrationStatus);
     const detail = el('details', 'tleventdetails'); detail.open = false; detail.append(el('summary', null, 'Event details & archive records'));
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'Mapped party / interest: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short + ' [' + (entry[1][1] === 'dashed' ? 'reconstructed / not fully established' : 'source seen') + ']').join('; ') + '.'));
@@ -431,7 +432,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   function speakHeadline(eventId, force = false) {
     if ((!narrationOn && !force) || !eventId) return;
     const url = VOICE_ENDPOINT + '?id=' + encodeURIComponent(eventId) + '&v=2';
-    narrationStatus.textContent = 'Loading Eldrin voice…';
+    narrationStatus.textContent = 'Loading Eldrin voice…'; hearNowBtn.textContent = '⏳ Loading';
     voiceAudio.pause();
     voiceAudio.removeAttribute('src');
     voiceAudio.src = url;
@@ -439,9 +440,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const attempt = voiceAudio.play();
     if (attempt && typeof attempt.then === 'function') {
       attempt.then(() => {
-        narrationStatus.textContent = 'Playing · Eldrin · British male AI voice';
+        narrationStatus.textContent = 'Playing · Eldrin · British male AI voice'; hearNowBtn.textContent = '🔊 Playing';
       }).catch(err => {
-        narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')';
+        narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')'; hearNowBtn.textContent = '🔊 Retry';
         console.warn('Timelapse AI audio playback:', err);
       });
     }
@@ -498,7 +499,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
   }
-  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); } const first = EV[Math.min(idx, EV.length - 1)]; if (narrationOn && first) speakHeadline(first.id, true); setPlaying(true); last = performance.now(); } else setPlaying(false); });
+  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); } if (idx < EV.length) { const nextIndex = idx; t = EV[nextIndex].t; trigger(nextIndex); idx = nextIndex + 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
   exit.addEventListener('click', () => setMode(!on));
   parOn.addEventListener('change', () => { if (on) { ovl.custom = parOn.checked ? custom : () => {}; redraw(); } });
   const trackT = ev => { const r = track.getBoundingClientRect(); return START + Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * (END - START); };
