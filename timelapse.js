@@ -343,10 +343,10 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   voiceAudio.playsInline = true; voiceAudio.setAttribute('playsinline', ''); voiceAudio.setAttribute('webkit-playsinline', '');
   voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
   root.append(voiceAudio);
-  const narrationStatus = el('small', 'tlnarrationstatus', 'Eldrin · British male AI voice');
+  const narrationStatus = el('small', 'tlnarrationstatus', 'Helios · British male AI voice');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
   hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Play the current event headline using the AI narrator';
-  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · Eldrin · British male AI voice'; });
+  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · Helios · British male AI voice'; });
   const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Turn automatic narration on or off';
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
@@ -432,7 +432,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   function speakHeadline(eventId, force = false) {
     if ((!narrationOn && !force) || !eventId) return;
     const url = VOICE_ENDPOINT + '?id=' + encodeURIComponent(eventId) + '&v=2';
-    narrationStatus.textContent = 'Loading Eldrin voice…'; hearNowBtn.textContent = '⏳ Loading';
+    narrationStatus.textContent = 'Loading Helios voice…'; hearNowBtn.textContent = '⏳ Loading';
     voiceAudio.pause();
     voiceAudio.removeAttribute('src');
     voiceAudio.src = url;
@@ -440,7 +440,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const attempt = voiceAudio.play();
     if (attempt && typeof attempt.then === 'function') {
       attempt.then(() => {
-        narrationStatus.textContent = 'Playing · Eldrin · British male AI voice'; hearNowBtn.textContent = '🔊 Playing';
+        narrationStatus.textContent = 'Playing · Helios · British male AI voice'; hearNowBtn.textContent = '🔊 Playing';
       }).catch(err => {
         narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')'; hearNowBtn.textContent = '🔊 Retry';
         console.warn('Timelapse AI audio playback:', err);
