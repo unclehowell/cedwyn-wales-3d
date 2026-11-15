@@ -31,7 +31,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   W.views.tl_house = [ah[0], ah[1], 105, 24, 140];
 
   // ---------- state of the land for a given event index ----------
-  const initial = () => Object.fromEntries(polys.map(p => [p.id, { h: 'bute', s: 'dashed' }]));
+  const initial = () => Object.fromEntries(polys.map(p => [p.id, { h: 'unknown', s: 'dashed' }]));
   function foldTo(k) { const cur = initial(); for (let i = 0; i <= k; i++) Object.entries(EV[i].set || {}).forEach(([id, [h, s]]) => { cur[id] = { h, s }; }); return cur; }
   const noteFor = k => { const o = {}; for (let i = 0; i <= k; i++) Object.assign(o, EV[i].note || {}); return o; };
   let cur = foldTo(-1), curNote = {}, split = false;
@@ -269,7 +269,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const loopL = el('label', 'tloption'); const loop = el('input'); loop.type = 'checkbox'; loop.checked = true; loopL.append(loop, 'Loop');
   const parL = el('label', 'tloption'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
   let narrationOn = true, audioUnlocked = false, currentEvent = -1, voiceSequence = 0;
-  const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.<WORKERS_SUBDOMAIN>.workers.dev/speak';
+  const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.righteous.workers.dev/speak';
   const voiceBlobs = new Map(), voiceAudio = el('audio'); voiceAudio.preload = 'none'; voiceAudio.hidden = true; root.append(voiceAudio);
   const narrationBtn = el('button', 'tloptionbtn', 'Male AI narrator: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Generate event headlines with an AI British male baritone voice';
@@ -300,7 +300,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const e = EV[i]; modalIdx = i; modal.hidden = false; modal.className = e.status === 'dashed' ? 'dashed' : ''; modal.replaceChildren();
     const x = el('button', 'tlx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeModal);
     modal.append(x, el('div', 'tld', e.date + (e.category ? ' · ' + e.category : '')), el('h3', null, e.title),
-      el('span', 'tlst', e.status === 'dashed' ? 'Family testimony / source gap' + (e.reason ? ' · ' + e.reason : '') : 'Source record seen'));
+      el('span', 'tlst', e.status === 'dashed' ? 'Reconstructed / source gap' + (e.reason ? ' · ' + e.reason : '') : 'Source record seen'));
     const detail = el('details', 'tleventdetails'); detail.open = false; detail.append(el('summary', null, 'Event details & archive records'));
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'Mapped party / interest: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short + ' [' + (entry[1][1] === 'dashed' ? 'reconstructed / not fully established' : 'source seen') + ']').join('; ') + '.'));
