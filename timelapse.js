@@ -339,14 +339,19 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const parL = el('label', 'tloption'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
   let narrationOn = true, audioUnlocked = false, currentEvent = -1, voiceSequence = 0;
   const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.righteous.workers.dev/speak';
-  const voiceBlobs = new Map(), voiceAudio = el('audio'); voiceAudio.preload = 'none'; voiceAudio.hidden = true; root.append(voiceAudio);
-  const narrationBtn = el('button', 'tloptionbtn', 'Male AI narrator: On'); narrationBtn.type = 'button';
-  narrationBtn.title = 'Generate event headlines with an AI British male baritone voice';
-  const narrationStatus = el('small', 'tlnarrationstatus', 'AI voice · Eldrin · British baritone');
+  const voiceAudio = el('audio'); voiceAudio.id = 'tlvoiceaudio'; voiceAudio.preload = 'none';
+  voiceAudio.playsInline = true; voiceAudio.setAttribute('playsinline', ''); voiceAudio.setAttribute('webkit-playsinline', '');
+  voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; });
+  root.append(voiceAudio);
+  const narrationStatus = el('small', 'tlnarrationstatus', 'Eldrin · British male AI voice');
+  const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
+  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Play the current event headline using the AI narrator';
+  const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
+  narrationBtn.title = 'Turn automatic narration on or off';
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
   const more = el('details'); more.id = 'tlmore'; more.append(el('summary', null, 'Options'));
-  const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, narrationStatus, exit); more.append(moreBody);
-  bar.append(play, year, track, more); root.append(bar);
+  const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, exit); more.append(moreBody);
+  bar.append(play, hearNowBtn, year, track, more); root.append(bar);
   const legend = el('details'); legend.id = 'tllegend'; const legendTitle = el('summary', null, 'Land & standards');
   const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); moreBody.append(legend);
   legend.open = false; more.open = false;
@@ -390,6 +395,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const x = el('button', 'tlx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeModal);
     modal.append(x, el('div', 'tld', e.date + (e.category ? ' · ' + e.category : '')), el('h3', null, e.title),
       el('span', 'tlst', e.status === 'dashed' ? 'Reconstructed / source gap' + (e.reason ? ' · ' + e.reason : '') : 'Source record seen'));
+    const hearEvent = el('button', 'tlhear', '🔊 Hear this headline'); hearEvent.type = 'button';
+    hearEvent.addEventListener('click', () => { audioUnlocked = true; narrationOn = true; speakHeadline(e.id, true); });
+    modal.append(hearEvent);
     const detail = el('details', 'tleventdetails'); detail.open = false; detail.append(el('summary', null, 'Event details & archive records'));
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'Mapped party / interest: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short + ' [' + (entry[1][1] === 'dashed' ? 'reconstructed / not fully established' : 'source seen') + ']').join('; ') + '.'));
@@ -418,39 +426,41 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function closeModal() { modal.hidden = true; modalIdx = -1; dwell = 0; }
 
-  // Cached, server-generated neural speech. No browser speech-synthesis fallback is used.
-  async function speakHeadline(eventId) {
-    if (!narrationOn || !audioUnlocked || !eventId) return;
-    const seq = ++voiceSequence;
-    narrationStatus.textContent = 'Generating / loading AI narration…';
+  // Play a same-origin-style audio URL directly from the user's tap.
+  // Calling HTMLMediaElement.play() before awaiting anything preserves mobile user activation.
+  function speakHeadline(eventId, force = false) {
+    if ((!narrationOn && !force) || !eventId) return;
+    const url = VOICE_ENDPOINT + '?id=' + encodeURIComponent(eventId) + '&v=2';
+    narrationStatus.textContent = 'Loading Eldrin voice…';
     voiceAudio.pause();
-    try {
-      let url = voiceBlobs.get(eventId);
-      if (!url) {
-        const response = await fetch(VOICE_ENDPOINT, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: eventId })
-        });
-        if (!response.ok) throw new Error('Voice service returned ' + response.status);
-        const blob = await response.blob();
-        if (!blob.type.includes('audio')) throw new Error('Voice service did not return audio');
-        url = URL.createObjectURL(blob); voiceBlobs.set(eventId, url);
-      }
-      if (seq !== voiceSequence || !narrationOn) return;
-      voiceAudio.src = url; voiceAudio.currentTime = 0;
-      await voiceAudio.play();
-      narrationStatus.textContent = 'AI narrator · Eldrin · British baritone';
-    } catch (err) {
-      if (seq === voiceSequence) narrationStatus.textContent = 'AI narration unavailable · tap the headline again or reload';
-      console.warn('Timelapse AI narration:', err);
+    voiceAudio.removeAttribute('src');
+    voiceAudio.src = url;
+    voiceAudio.load();
+    const attempt = voiceAudio.play();
+    if (attempt && typeof attempt.then === 'function') {
+      attempt.then(() => {
+        narrationStatus.textContent = 'Playing · Eldrin · British male AI voice';
+      }).catch(err => {
+        narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')';
+        console.warn('Timelapse AI audio playback:', err);
+      });
     }
   }
   function narrateHeadline(eventId) { speakHeadline(eventId); }
+  function currentHeadlineId() {
+    if (currentEvent >= 0) return EV[currentEvent].id;
+    const next = EV.find(e => e.t >= t - 0.01);
+    return next ? next.id : EV[EV.length - 1].id;
+  }
+  hearNowBtn.addEventListener('click', () => {
+    audioUnlocked = true; narrationOn = true;
+    speakHeadline(currentHeadlineId(), true);
+  });
   narrationBtn.addEventListener('click', () => {
-    audioUnlocked = true; narrationOn = !narrationOn;
-    narrationBtn.textContent = narrationOn ? 'Male AI narrator: On' : 'Male AI narrator: Off';
-    if (!narrationOn) { voiceSequence++; voiceAudio.pause(); }
-    else if (currentEvent >= 0) speakHeadline(EV[currentEvent].id);
+    narrationOn = !narrationOn;
+    narrationBtn.textContent = narrationOn ? 'Auto narration: On' : 'Auto narration: Off';
+    if (!narrationOn) { voiceAudio.pause(); narrationStatus.textContent = 'Auto narration off · use Hear to play a headline'; }
+    else { narrationStatus.textContent = 'Auto narration on · tap Hear headline to test'; }
   });
 
   // ---------- control ----------
@@ -488,7 +498,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
   }
-  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
+  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); } const first = EV[Math.min(idx, EV.length - 1)]; if (narrationOn && first) speakHeadline(first.id, true); setPlaying(true); last = performance.now(); } else setPlaying(false); });
   exit.addEventListener('click', () => setMode(!on));
   parOn.addEventListener('change', () => { if (on) { ovl.custom = parOn.checked ? custom : () => {}; redraw(); } });
   const trackT = ev => { const r = track.getBoundingClientRect(); return START + Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * (END - START); };
