@@ -1,4 +1,4 @@
-// Wales 3D world v0.5.0 — the 1877 → today timelapse.
+// Wales 3D world v0.7.0 — the 1535 → today land, lordship, title and occupation timelapse.
 // The 3D world stays a normal, orbitable 3D world; this layer adds a play bar along the top, redraws the family's land
 // parcels on the terrain for each year, shows the archive record for each event in a modal, and loops.
 // Data: data/timeline.json (events, holders, sources) and data/family-parcels.geojson (the four parcels, EPSG:4326).
@@ -11,11 +11,11 @@ const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls)
 const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r => addEventListener('w3d:ready', () => r(window.__w3d), { once: true }));
 
 (async function () {
-  const [W, TL, GJ] = await Promise.all([ready(), fetch(DATA + 'timeline.json?v=0.5.0').then(r => r.json()), fetch(DATA + 'family-parcels.geojson?v=0.5.0').then(r => r.json())]);
+  const [W, TL, GJ] = await Promise.all([ready(), fetch(DATA + 'timeline.json?v=0.7.0').then(r => r.json()), fetch(DATA + 'family-parcels.geojson?v=0.7.0').then(r => r.json())]);
   const { THREE, scene, camera, controls, world, ovl } = W;
   const root = $('#w3d'); if (!root) return;
   const EV = TL.events, START = TL.start, END = TL.end, RATE = 3.7; // years of story per second at 1×
-  const demIdx = EV.findIndex(e => e.demolish), modIdx = EV.findIndex(e => e.modern);
+  const demIdx = EV.findIndex(e => e.demolish), modIdx = EV.findIndex(e => e.modern), splitIdx = EV.findIndex(e => e.id === 'e1877');
 
   // ---------- parcels in world coordinates ----------
   const polys = GJ.features.map(f => {
@@ -44,14 +44,14 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const path = p => { g.beginPath(); p.rings.forEach(r => { r.forEach(([x, z], i) => i ? g.lineTo(X(x), Y(z)) : g.moveTo(X(x), Y(z))); g.closePath(); }); };
     if (!split) { // before 1877 the ground is one holding: one fill, no inner lines
       g.beginPath(); polys.forEach(p => p.rings.forEach(r => { r.forEach(([x, z], i) => i ? g.lineTo(X(x), Y(z)) : g.moveTo(X(x), Y(z))); g.closePath(); }));
-      g.fillStyle = rgba(TL.holders.bute.col, 0.5); g.fill('evenodd');
+      g.fillStyle = rgba(TL.holders.unknown.col, 0.28); g.fill('evenodd');
     } else polys.forEach(p => {
       const c = cur[p.id], H = TL.holders[c.h]; path(p); g.fillStyle = rgba(H.col, 0.52); g.fill('evenodd');
       const hot = flashOn && flash && flash.ids.includes(p.id);
       g.lineJoin = 'round'; g.lineWidth = hot ? 9 : 5; g.strokeStyle = hot ? '#fff6a8' : dark(H.col); g.setLineDash(c.s === 'dashed' ? [24, 15] : []); g.stroke(); g.setLineDash([]);
     });
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 15px system-ui,sans-serif';
-    polys.forEach(p => { if (!split && p.id !== 'AM') return; const t = split ? TL.parcels[p.id] : 'Tŷ Mawr land';
+    polys.forEach(p => { if (!split && p.id !== 'AM') return; const t = split ? TL.parcels[p.id] : 'Tŷ Mawr · historic extent not mapped';
       g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText(t, X(p.c[0]), Y(p.c[1])); g.fillStyle = '#fff'; g.fillText(t, X(p.c[0]), Y(p.c[1])); });
   }
   const redraw = () => W.drawOverlay();
@@ -179,23 +179,20 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   function placeSoldier(actor, x, z) {
     actor.group.position.set(x, W.hAt(x, z) + 0.35, z); actor.from = actor.to = null; actor.moveAt = 0;
   }
-  const familyStartIdx = EV.findIndex(e => Object.values(e.set || {}).some(v => v && v[0] === 'family'));
+  const familyStartIdx = EV.findIndex(e => Array.isArray(e.occupancy && e.occupancy.family));
   const familyExitIdx = demIdx;
   const familyStartIds = familyStartIdx >= 0
-    ? Object.entries(EV[familyStartIdx].set || {}).filter(entry => entry[1][0] === 'family').map(entry => entry[0]) : [];
+    ? EV[familyStartIdx].occupancy.family.filter(id => polys.some(p => p.id === id)) : [];
   const familyActors = [], britishActors = {};
-  function familyTargetFor(startId, k) {
-    let id = startId;
-    for (let j = familyStartIdx + 1; j <= k; j++) {
-      if (j === familyExitIdx) return { id: 'off', off: true };
-      const atEvent = foldTo(j);
-      if (!atEvent[id] || atEvent[id].h !== 'family') {
-        const stillHeld = polys.find(p => atEvent[p.id] && atEvent[p.id].h === 'family');
-        // If title parcels are exhausted, retain the family figures at the farmhouse to represent
-        // continuing family presence/occupation until 1988, not registered title.
-        id = stillHeld ? stillHeld.id : 'AM';
-      }
-    }
+  function familyOccupancyAt(k) {
+    let current = [];
+    for (let j = 0; j <= k; j++) if (Array.isArray(EV[j].occupancy && EV[j].occupancy.family)) current = EV[j].occupancy.family.slice();
+    return current;
+  }
+  function familyTargetFor(actor, slot, k) {
+    if (familyExitIdx >= 0 && k >= familyExitIdx) return { id: 'off', off: true };
+    const occupied = familyOccupancyAt(k).filter(id => polys.some(p => p.id === id));
+    const id = occupied.length ? occupied[Math.min(slot, occupied.length - 1)] : 'AM';
     return { id, off: false };
   }
   function offLandPoint(slot) { return [cx - span * 0.78 + (slot - 1) * 8, cz + span * 0.78 + (slot - 1) * 6]; }
@@ -207,10 +204,10 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     } else {
       while (familyActors.length < familyStartIds.length) {
         const n = familyActors.length, id = familyStartIds[n];
-        familyActors.push(createSoldier('family', id, n, 'Williams–Buckler family', false));
+        familyActors.push(createSoldier('family', id, n, 'Williams family · occupation', false));
       }
       familyActors.forEach((actor, n) => {
-        const target = familyTargetFor(actor.parcelId, k);
+        const target = familyTargetFor(actor, n, k);
         const pt = target.off ? offLandPoint(n) : pointForParcel(target.id, n, 1);
         if (actor.targetId !== target.id) {
           actor.targetId = target.id;
@@ -220,8 +217,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       });
     }
     polys.forEach((p, n) => {
-      const h = stateAt[p.id] ? stateAt[p.id].h : 'bute';
-      if (h === 'family') {
+      const h = stateAt[p.id] ? stateAt[p.id].h : 'unknown';
+      if (h === 'family' || h === 'unknown') {
         if (britishActors[p.id]) { removeSoldier(britishActors[p.id]); delete britishActors[p.id]; }
         return;
       }
@@ -257,26 +254,29 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
 
   // ---------- UI ----------
   root.classList.add('tl');
-  const bar = el('div'); bar.id = 'tlbar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Timelapse 1877 to today');
+  const bar = el('div'); bar.id = 'tlbar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Timelapse 1535 to today');
   const play = el('button', null, '▶ Play'); play.id = 'tlplay'; play.type = 'button'; play.setAttribute('aria-pressed', 'false'); play.title = 'Play or stop the timelapse (space)';
-  const year = el('span', null, '1877'); year.id = 'tlyear'; year.setAttribute('aria-live', 'off');
+  const year = el('span', null, '1535'); year.id = 'tlyear'; year.setAttribute('aria-live', 'off');
   const track = el('div'); track.id = 'tltrack'; track.setAttribute('role', 'slider'); track.setAttribute('aria-label', 'Year'); track.setAttribute('aria-valuemin', START); track.setAttribute('aria-valuemax', Math.floor(END)); track.tabIndex = 0;
   const fill = el('div'); fill.id = 'tlfill'; const head = el('div'); head.id = 'tlhead'; track.append(fill);
   const pct = t => ((t - START) / (END - START) * 100);
   const ticks = EV.map((e, i) => { const b = el('button', 'tltick' + (e.status === 'dashed' ? ' dashed' : '')); b.type = 'button'; b.style.left = pct(e.t) + '%'; b.title = e.title; b.setAttribute('aria-label', e.title);
     b.addEventListener('click', ev => { ev.stopPropagation(); seekEvent(i); }); b.addEventListener('pointerdown', ev => ev.stopPropagation()); track.append(b); return b; });
   track.append(head);
-  const ends = el('div'); ends.id = 'tlends'; ends.append(el('span', null, '1877'), el('span', null, 'today')); ends.style.top = '-2px'; track.append(ends);
+  const ends = el('div'); ends.id = 'tlends'; ends.append(el('span', null, '1535'), el('span', null, 'today')); ends.style.top = '-2px'; track.append(ends);
   const speed = el('select'); speed.id = 'tlspd'; speed.setAttribute('aria-label', 'Speed'); [['0.5', '½×'], ['1', '1×'], ['2', '2×'], ['4', '4×']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; if (v === '1') o.selected = true; speed.append(o); });
   const speedL = el('label', 'tloption'); speedL.append(el('span', null, 'Speed'), speed);
   const loopL = el('label', 'tloption'); const loop = el('input'); loop.type = 'checkbox'; loop.checked = true; loopL.append(loop, 'Loop');
   const parL = el('label', 'tloption'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
-  let narrationOn = true, audioUnlocked = false, pendingHeadline = '', currentEvent = -1;
-  const narrationBtn = el('button', 'tloptionbtn', 'Narration: On'); narrationBtn.type = 'button';
-  narrationBtn.title = 'Speak event headlines in English using the closest available Welsh or UK female voice on this device';
+  let narrationOn = true, audioUnlocked = false, currentEvent = -1, voiceSequence = 0;
+  const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.<WORKERS_SUBDOMAIN>.workers.dev/speak';
+  const voiceBlobs = new Map(), voiceAudio = el('audio'); voiceAudio.preload = 'none'; voiceAudio.hidden = true; root.append(voiceAudio);
+  const narrationBtn = el('button', 'tloptionbtn', 'Male AI narrator: On'); narrationBtn.type = 'button';
+  narrationBtn.title = 'Generate event headlines with an AI British male baritone voice';
+  const narrationStatus = el('small', 'tlnarrationstatus', 'AI voice · Eldrin · British baritone');
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
   const more = el('details'); more.id = 'tlmore'; more.append(el('summary', null, 'Options'));
-  const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, exit); more.append(moreBody);
+  const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, narrationStatus, exit); more.append(moreBody);
   bar.append(play, year, track, more); root.append(bar);
   const legend = el('details'); legend.id = 'tllegend'; const legendTitle = el('summary', null, 'Land & standards');
   const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); moreBody.append(legend);
@@ -286,11 +286,11 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const modal = el('div'); modal.id = 'tlmodal'; modal.hidden = true; modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-live', 'polite'); root.append(modal);
 
   function updateLegend() {
-    legendBody.replaceChildren(el('b', null, split ? 'Who held the land' : 'Tŷ Mawr land, before 1877'));
-    if (!split) { const d = el('div'); const i = el('i', 'd'); i.style.background = TL.holders.bute.col; d.append(i, 'One holding · Bute Estate'); legendBody.append(d); }
+    legendBody.replaceChildren(el('b', null, split ? 'Mapped parties and interests' : 'Earlier landscape · extent unresolved'));
+    if (!split) { const d = el('div'); const i = el('i', 'd'); i.style.background = TL.holders.unknown.col; d.append(i, 'Historic farm extent not mapped; lordship and freehold records are separate'); legendBody.append(d); }
     else polys.forEach(p => { const c = cur[p.id], H = TL.holders[c.h], d = el('div'); const i = el('i', c.s === 'dashed' ? 'd' : ''); i.style.background = rgba(H.col, 0.8); i.style.borderColor = dark(H.col);
       d.append(i, TL.parcels[p.id] + ' · ' + H.short + (curNote[p.id] ? ' (' + curNote[p.id] + ')' : '')); legendBody.append(d); });
-    legendBody.append(el('small', null, 'Solid outline: a record has been seen. Dashed: the family’s case, or a record not yet seen. Green figures show continuing Williams family presence, not registered title. Figures and flags are symbolic, not a claim that soldiers were physically present.'));
+    legendBody.append(el('small', null, 'Colours show the party or interest identified in the dated source trail; they are not a blanket finding of freehold title. Green figures represent Williams family occupation, separately from title. Red/blue/white figures mark other recorded parties or interests. Court orders, tenancy offers and village-green registration do not themselves convey freehold. The 36 tithe plots and wider manorial estate are described in the event cards, not falsely plotted as these four shapes. All figures and flags are symbolic.'));
   }
 
   // ---------- modal ----------
@@ -299,11 +299,12 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   function showModal(i) {
     const e = EV[i]; modalIdx = i; modal.hidden = false; modal.className = e.status === 'dashed' ? 'dashed' : ''; modal.replaceChildren();
     const x = el('button', 'tlx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeModal);
-    modal.append(x, el('div', 'tld', e.date), el('h3', null, e.title),
-      el('span', 'tlst', e.status === 'dashed' ? 'Not established' + (e.reason ? ' · ' + e.reason : '') : 'Record seen'));
+    modal.append(x, el('div', 'tld', e.date + (e.category ? ' · ' + e.category : '')), el('h3', null, e.title),
+      el('span', 'tlst', e.status === 'dashed' ? 'Family testimony / source gap' + (e.reason ? ' · ' + e.reason : '') : 'Source record seen'));
     const detail = el('details', 'tleventdetails'); detail.open = false; detail.append(el('summary', null, 'Event details & archive records'));
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
-    const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'On the map: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short).join('; ') + '.'));
+    const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'Mapped party / interest: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short + ' [' + (entry[1][1] === 'dashed' ? 'reconstructed / not fully established' : 'source seen') + ']').join('; ') + '.'));
+    if (e.occupancy && Array.isArray(e.occupancy.family)) body.append(el('p', 'tlch', 'Williams family occupation shown on: ' + (e.occupancy.family.length ? e.occupancy.family.map(id => TL.parcels[id] || id).join('; ') : 'no longer on the land') + (e.occupancy.note ? '. ' + e.occupancy.note : '') + '.'));
     if (e.sources && e.sources.length) { body.append(el('div', 'tld', 'Archive records')); const ul = el('ul');
       e.sources.forEach(s => { const li = el('li'), a = el('a', null, s.t); a.href = s.u; a.target = '_blank'; a.rel = 'noopener'; li.append(a); ul.append(li); }); body.append(ul); }
     const nx = el('button', 'tlnext', 'Next event ▸'); nx.type = 'button'; nx.addEventListener('click', () => { dwell = 0.001; }); body.append(nx);
@@ -312,65 +313,73 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function closeModal() { modal.hidden = true; modalIdx = -1; dwell = 0; }
 
-  // Use the closest installed Welsh-English/UK female browser voice for event headlines.
-  const speechAvailable = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
-  function chooseNarrationVoice() {
-    if (!speechAvailable) return null;
-    const all = speechSynthesis.getVoices(), english = all.filter(v => /^en([_-]|$)/i.test(v.lang || ''));
-    const welshUK = english.filter(v => /welsh|wales|cymru|en[-_]gb[-_]wls/i.test(v.name + ' ' + v.lang));
-    const uk = english.filter(v => /^en[-_]gb/i.test(v.lang || '') || /united kingdom|\buk\b/i.test(v.name));
-    const feminine = v => /female|libby|hazel|sarah|sonia|serena|heather|kate|emma|amy|moira|fiona|gwen|sian|siân|victoria/i.test(v.name);
-    return welshUK.find(feminine) || welshUK[0] || uk.find(feminine) || uk[0] || english.find(feminine) || english[0] || null;
+  // Cached, server-generated neural speech. No browser speech-synthesis fallback is used.
+  async function speakHeadline(eventId) {
+    if (!narrationOn || !audioUnlocked || !eventId) return;
+    const seq = ++voiceSequence;
+    narrationStatus.textContent = 'Generating / loading AI narration…';
+    voiceAudio.pause();
+    try {
+      let url = voiceBlobs.get(eventId);
+      if (!url) {
+        const response = await fetch(VOICE_ENDPOINT, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: eventId })
+        });
+        if (!response.ok) throw new Error('Voice service returned ' + response.status);
+        const blob = await response.blob();
+        if (!blob.type.includes('audio')) throw new Error('Voice service did not return audio');
+        url = URL.createObjectURL(blob); voiceBlobs.set(eventId, url);
+      }
+      if (seq !== voiceSequence || !narrationOn) return;
+      voiceAudio.src = url; voiceAudio.currentTime = 0;
+      await voiceAudio.play();
+      narrationStatus.textContent = 'AI narrator · Eldrin · British baritone';
+    } catch (err) {
+      if (seq === voiceSequence) narrationStatus.textContent = 'AI narration unavailable · tap the headline again or reload';
+      console.warn('Timelapse AI narration:', err);
+    }
   }
-  function speakHeadline(title) {
-    pendingHeadline = title || pendingHeadline;
-    if (!narrationOn || !speechAvailable || !audioUnlocked || !pendingHeadline) return;
-    speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(pendingHeadline.replace(/·/g, ', '));
-    utterance.lang = 'en-GB'; utterance.rate = 0.91; utterance.pitch = 1.04;
-    const voice = chooseNarrationVoice(); if (voice) { utterance.voice = voice; utterance.lang = voice.lang || 'en-GB'; }
-    speechSynthesis.speak(utterance); pendingHeadline = '';
-  }
-  function narrateHeadline(title) { pendingHeadline = title; speakHeadline(title); }
-  if (!speechAvailable) { narrationBtn.textContent = 'Narration unavailable'; narrationBtn.disabled = true; narrationBtn.title = 'This browser does not provide speech synthesis'; }
-  else if (speechSynthesis.getVoices().length === 0) speechSynthesis.addEventListener('voiceschanged', () => { chooseNarrationVoice(); });
+  function narrateHeadline(eventId) { speakHeadline(eventId); }
   narrationBtn.addEventListener('click', () => {
-    audioUnlocked = true; narrationOn = !narrationOn; narrationBtn.textContent = narrationOn ? 'Narration: On' : 'Narration: Off';
-    if (!narrationOn && speechAvailable) speechSynthesis.cancel();
-    else if (narrationOn) speakHeadline(currentEvent >= 0 ? EV[currentEvent].title : pendingHeadline);
+    audioUnlocked = true; narrationOn = !narrationOn;
+    narrationBtn.textContent = narrationOn ? 'Male AI narrator: On' : 'Male AI narrator: Off';
+    if (!narrationOn) { voiceSequence++; voiceAudio.pause(); }
+    else if (currentEvent >= 0) speakHeadline(EV[currentEvent].id);
   });
 
   // ---------- control ----------
   let on = false, playing = false, t = START, idx = 0, last = performance.now(), flashT = 0;
   function setPlaying(p) { playing = p; play.textContent = p ? 'Ⅱ Pause' : '▶ Play'; play.setAttribute('aria-pressed', String(p)); }
   function applyInstant(k) { // state of the world after events 0..k, no animation
-    cur = foldTo(k); curNote = noteFor(k); split = k >= 1;
+    cur = foldTo(k); curNote = noteFor(k); split = k >= splitIdx;
     const dem = demIdx >= 0 && k >= demIdx, mod = modIdx >= 0 && k >= modIdx; houseState(dem, mod); setModern(mod, false); syncSoldiers(k, false); flash = null; flashOn = false; redraw(); updateLegend();
   }
   function trigger(i) {
-    const e = EV[i]; currentEvent = i; cur = foldTo(i); curNote = noteFor(i); if (i >= 1) split = true; if (i === 0) { split = false; applyInstant(0); split = false; redraw(); updateLegend(); }
-    if (i === 0) W.flyTo('tl_aerial');
+    const e = EV[i]; currentEvent = i; cur = foldTo(i); curNote = noteFor(i); if (i >= splitIdx) split = true; if (i === 0) { split = false; applyInstant(0); split = false; redraw(); updateLegend(); }
+    if (i === 0 || i === splitIdx) W.flyTo('tl_aerial');
     if (e.demolish) { houseState(false, false); demoAt = performance.now(); startDust(); W.flyTo('tl_house'); }
     else if (i === demIdx + 1 && demIdx >= 0) W.flyTo('tl_aerial');
     if (e.modern) { house.visible = false; church.visible = false; rubble.visible = false; setModern(true, true); }
     const ids = Object.keys(e.set || {}); flash = ids.length ? { ids, until: performance.now() + 2600 } : null; flashOn = !!flash; flashT = performance.now();
-    syncSoldiers(i, true); redraw(); updateLegend(); showModal(i); narrateHeadline(e.title); dwellTotal = dwell = dwellFor(e);
+    syncSoldiers(i, true); redraw(); updateLegend(); showModal(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e);
   }
   function seek(nt) { // scrub to a year, no modal
     t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; closeModal(); applyInstant(k);
-    if (k < 1) { split = false; redraw(); updateLegend(); }
+    if (k < splitIdx) { split = false; redraw(); updateLegend(); }
   }
-  function seekEvent(i) { if (!on) setMode(true); closeModal(); applyInstant(i - 1); if (i < 1) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  function seekEvent(i) { audioUnlocked = true; if (!on) setMode(true); closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
   function endOfRun() {
     if (loop.checked) { t = START; idx = 0; closeModal(); applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; }
     else { setPlaying(false); }
   }
   function setMode(m) {
     on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; legend.hidden = !m; bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
-    exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1877 → today timelapse';
+    exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1535 → today land, lordship and occupation timelapse';
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
   }
-  play.addEventListener('click', () => { audioUnlocked = true; if (pendingHeadline && narrationOn) speakHeadline(pendingHeadline); if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
+  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
   exit.addEventListener('click', () => setMode(!on));
   parOn.addEventListener('change', () => { if (on) { ovl.custom = parOn.checked ? custom : () => {}; redraw(); } });
   const trackT = ev => { const r = track.getBoundingClientRect(); return START + Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * (END - START); };
