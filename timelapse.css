@@ -141,3 +141,19 @@
 .tlmorebody #tllegend>summary{min-height:42px;padding:8px 10px;font-size:14px}
 .tlmorebody #tllegend .tllegendbody{max-height:28vh;padding:0 10px 9px}
 @media(max-width:700px){#tllegend{display:block}}
+
+
+/* Event headline stays as a compact map caption; detail/archive content stays folded. */
+#tlmodal{max-height:18dvh;min-height:0;padding-top:9px;padding-bottom:9px}
+#tlmodal h3{font-size:16px;line-height:1.2;margin:2px 0 3px}
+#tlmodal .tld{font-size:12px}
+#tlmodal .tlst{font-size:11px;margin:2px 0 4px;padding:2px 7px}
+#tlmodal .tleventdetails>summary{min-height:34px;font-size:13px;padding:3px 8px}
+#tlmodal .tlbar2{margin-bottom:-9px}
+@media(max-width:700px){
+ #tlmodal{max-height:18dvh;padding:8px 42px 8px 10px;bottom:36px}
+ #tlmodal h3{font-size:15px;line-height:1.2}
+ #tlmodal .tld{font-size:12px}
+ #tlmodal .tlst{font-size:11px;margin:2px 0 3px}
+ #tlmodal .tleventdetails>summary{min-height:34px;font-size:13px}
+}
