@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "start": 1535,
   "end": 2026.87,
   "note": "Expanded chronology of the wider Tŷ Mawr / Great House Farm landscape. Four modern overlay polygons are schematic anchors only; the 36 c.1841 tithe parcels, the 1824 c.107-acre plan and off-map manorial or estate interests are described in the event cards and are not falsely fitted to those polygons. Colour states indicate the party/interest in the source trail, not a judicial finding of freehold title. Family occupation is a separate track from title.",
@@ -208,11 +208,15 @@
       "category": "Estate survey · identity and extent",
       "status": "solid",
       "reason": null,
-      "text": "David Stewart's survey of the Bute Glamorgan estates labels plan 19 “Cedfin or Ty Mawr Farm”, with an area of about 107 acres. This is the earliest Tŷ Mawr name in the records found in the current archive. The plan's full acreage is not automatically identical to the later 1877 Parcel A and Parcel B split or the 1841 total; those extents must be compared, not assumed.",
+      "text": "David Stewart's survey of the Bute Glamorgan estates labels plan 19 “Cedfin or Ty Mawr Farm”, with an area of about 107 acres. The wider reconstructed estate plan contains 59 identified plot references, 44 with drawable outlines; these are now shown as a separate historic layer. Fifteen are unread or not placed and remain listed rather than being given invented boundaries. This 1824 plan framework is distinct from the later 1841 tithe apportionment and from the 1877 Parcel A and Parcel B division.",
       "sources": [
         {
           "t": "EV-0211 · David Stewart estate survey, plan 19, 1824",
           "u": "https://cedwyn.bucklerfamily.estate/research/evidence/ev-0211-db-e-1-plan-19-cedfin-ty-mawr-1824/"
+        },
+        {
+          "t": "59 historic plan references · mapped parcel layer and source notes",
+          "u": "https://cedwyn.bucklerfamily.estate/parcels/"
         }
       ]
     },
@@ -224,7 +228,7 @@
       "category": "Occupation and land tax / tithe record",
       "status": "solid",
       "reason": null,
-      "text": "The tithe apportionment lists John Williams as occupier of 36 parcels totalling about 119 acres, 2 roods and 30 perches. Six of those plots are indexed in Leckwith, totalling about 14 acres, 3 roods and 12 perches. The landowner column names the Marquess of Bute for 33 parcels and the glebe of the Revd James Evans for three. This is the clearest wide-area snapshot: Williams occupation across the holding, while the tithe's landowner column records other interests. The 36 tithe plots are not all individually placed in this four-shape 3D overlay.",
+      "text": "The tithe apportionment lists John Williams as occupier of 36 parcels totalling about 119 acres, 2 roods and 30 perches. Six of those plots are indexed in Leckwith, totalling about 14 acres, 3 roods and 12 perches. The landowner column names the Marquess of Bute for 33 parcels and the glebe of the Revd James Evans for three. This is the clearest wide-area snapshot: Williams occupation across the holding, while the tithe's landowner column records other interests. The map now opens the wider historic plan: 59 identified plan references, 44 drawn outlines and 15 unread or not placed. The outline groups are not one-to-one with the 36 tithe apportionment entries; some combine plots or split one plot into multiple components. Green figures mark Williams occupation; Union Jack standards mark the recorded landowner or estate interest. The apportionment owner column is not itself a modern registered-title determination.",
       "occupancy": {
         "family": [
           "AN",
@@ -240,6 +244,10 @@
         {
           "t": "The 36 parcels · overview",
           "u": "https://cedwyn.bucklerfamily.estate/parcels/"
+        },
+        {
+          "t": "The 59 plan references · mapped and unmapped entries",
+          "u": "https://cedwyn.bucklerfamily.estate/parcels/"
         }
       ]
     },
@@ -251,7 +259,7 @@
       "category": "Freehold / estate division · terms still under examination",
       "status": "dashed",
       "reason": "agreement not yet inspected; sale or quarry lease remains unresolved",
-      "text": "The present reconstruction places the farmhouse, buildings and about 10 acres in Parcel A, with about 9 acres of fields in Parcel B. The Bute Estate and Daniel Thomas & Son are linked to the transaction, but the instrument is not in hand and it is not yet settled whether the arrangement was a sale, quarry lease or a combination. The green south of the house is outside Parcel A; it is shown separately as VG41/A3. Williams occupation continues across the broader farm at this point.",
+      "text": "The farm is now shown through the two-part reconstruction: Parcel A, the farmhouse, buildings and north wood (about 10 acres), and Parcel B, the eastern fields (about 9 acres). The earlier 36-plot and wider plan layer contracts to this smaller mapped farm footprint. The Bute Estate and Daniel Thomas & Son are linked to the transaction, but the instrument is not in hand and it is not yet settled whether the arrangement was a sale, quarry lease or a combination. The green south of the house is outside Parcel A; it is shown separately as VG41/A3. Williams occupation continues across the wider farm at this stage, while the title and tenancy instruments begin to diverge between A and B.",
       "set": {
         "AN": [
           "thomas",
