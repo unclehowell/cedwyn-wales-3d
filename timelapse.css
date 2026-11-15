@@ -1,0 +1,51 @@
+/* Wales 3D world v0.5.0 — 1877 to today timelapse bar, legend and event modal */
+#tlbar{position:absolute;top:8px;left:8px;right:8px;z-index:4;display:flex;gap:10px;align-items:center;background:rgba(15,20,30,.78);border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px)}
+#w3d.tl #w3dtop{top:64px}
+#tlbar [hidden],#tllegend[hidden]{display:none!important}
+#tlbar .tltick{background:none;border:0;padding:0;border-radius:0}
+#tlbar button,#tlbar select{background:#2b3648;color:#eef;border:1px solid #4a5870;border-radius:6px;font:inherit;font-size:13px;cursor:pointer}
+#tlplay{min-width:78px;min-height:34px;font-weight:700;padding:3px 10px}
+#tlplay[aria-pressed=true]{background:#7a2f2f;border-color:#c46}
+#tlyear{font:700 24px/1 system-ui,sans-serif;min-width:5ch;text-align:center;font-variant-numeric:tabular-nums;color:#ffe9a8}
+#tltrack{position:relative;flex:1;height:30px;cursor:pointer;touch-action:none;min-width:80px}
+#tltrack::before{content:"";position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:#3a4558}
+#tlfill{position:absolute;left:0;top:12px;height:6px;border-radius:3px;background:linear-gradient(90deg,#6fb3ff,#ffe14a);width:0}
+#tlhead{position:absolute;top:6px;width:4px;height:18px;margin-left:-2px;border-radius:2px;background:#fff;box-shadow:0 0 6px #fff}
+.tltick{position:absolute;top:8px;width:10px;height:14px;margin-left:-5px;padding:0;border:0;background:none;cursor:pointer}
+.tltick::after{content:"";position:absolute;left:3px;top:0;width:4px;height:14px;border-radius:2px;background:#9cc7ff}
+.tltick.dashed::after{background:repeating-linear-gradient(#f0b34a 0 3px,transparent 3px 5px)}
+.tltick.on::after{background:#fff}
+.tltick:focus-visible{outline:2px solid #9cc7ff}
+#tlends{position:absolute;left:0;right:0;top:-1px;display:flex;justify-content:space-between;font-size:10px;opacity:.75;pointer-events:none}
+#tlbar label{font-size:12px;display:flex;gap:4px;align-items:center;white-space:nowrap}
+#tlbar select{padding:3px 4px}
+#tllegend{position:absolute;right:8px;bottom:34px;z-index:3;background:rgba(15,20,30,.78);border-radius:8px;padding:6px 9px;font-size:12px;max-width:260px;backdrop-filter:blur(4px)}
+#tllegend b{display:block;font-size:12px;margin-bottom:3px;color:#ffe9a8}
+#tllegend div{display:flex;gap:6px;align-items:center;padding:1px 0}
+#tllegend i{flex:none;width:14px;height:14px;border-radius:3px;border:2px solid rgba(0,0,0,.55)}
+#tllegend i.d{border-style:dashed}
+#tllegend small{opacity:.8;display:block;margin-top:3px}
+#tlmodal{position:absolute;left:8px;bottom:34px;z-index:5;width:min(470px,calc(100% - 16px));max-height:56vh;overflow:auto;background:rgba(15,20,30,.92);border-radius:10px;padding:10px 34px 10px 12px;font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.5);border-left:5px solid #9cc7ff}
+#tlmodal.dashed{border-left-color:#f0b34a}
+#tlmodal[hidden]{display:none}
+#tlmodal h3{margin:2px 0 4px;font-size:16px;line-height:1.25}
+#tlmodal .tld{font-size:12px;opacity:.85}
+#tlmodal .tlst{display:inline-block;margin:4px 0;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#1f5c3a;color:#bff2d0}
+#tlmodal.dashed .tlst{background:#6a4a12;color:#ffe3a6}
+#tlmodal p{margin:4px 0}
+#tlmodal ul{margin:3px 0 0;padding-left:17px}
+#tlmodal li{margin:2px 0;overflow-wrap:anywhere}
+#tlmodal a{color:#9cc7ff}
+#tlmodal .tlch{margin:5px 0 0;font-size:12px;color:#cdd6e4}
+#tlmodal .tlx{position:absolute;top:4px;right:6px;background:none;border:0;color:#eef;font-size:20px;cursor:pointer}
+#tlmodal .tlnext{margin-top:6px;background:#2b3648;color:#eef;border:1px solid #4a5870;border-radius:6px;font:inherit;font-size:12px;padding:3px 9px;cursor:pointer}
+#tlmodal .tlbar2{height:3px;margin:8px -34px -10px -12px;background:#9cc7ff;transform-origin:left;border-radius:0 0 10px 10px}
+@media (max-width:700px){
+ #tlbar{flex-wrap:wrap;gap:6px}
+ #tltrack{order:5;flex:1 1 100%}
+ #tlyear{font-size:20px}
+ #w3d.tl #w3dtop{top:108px}
+ #tllegend{display:none}
+ #tlmodal{max-height:42vh}
+}
+@media (prefers-reduced-motion:reduce){#tlmodal .tlbar2{display:none}}
