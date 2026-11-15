@@ -809,6 +809,38 @@
       ]
     },
     {
+      "id": "e1988s",
+      "t": 1988.72,
+      "date": "Oct 1988",
+      "title": "1988 · a wider BP portfolio sale does not include the Great House site",
+      "category": "Off-map corporate land sale",
+      "status": "dashed",
+      "reason": "press and company reporting; detailed site schedule not in the archive",
+      "text": "BP Pension Trust is reported to have sold a much wider Welsh land portfolio to Intercontinental Land & Development. The Great House Farm site itself remained in BP Properties Ltd's chain. This is an off-map corporate transaction and is not shown as a parcel transfer here.",
+      "sources": [
+        {
+          "t": "EV-0276 · press chronology for Ideal Homes, Church View Close and Persimmon",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e1988l",
+      "t": 1988.82,
+      "date": "Nov 1988",
+      "title": "1988 · the Land Authority for Wales acquires other Llandough plots",
+      "category": "Off-map public-land transaction",
+      "status": "dashed",
+      "reason": "press reference; parcels not matched to the Great House titles",
+      "text": "Press reporting describes the Land Authority for Wales acquiring plots in Llandough. The plots have not been matched to the Great House Farm title plan, so this is shown as a wider landscape event, not a transfer of A1, A2 or B.",
+      "sources": [
+        {
+          "t": "The National Archives · Welsh Office board papers, WA 9/49",
+          "u": "https://discovery.nationalarchives.gov.uk/"
+        }
+      ]
+    },
+    {
       "id": "e1988",
       "t": 1988.93,
       "date": "29 Nov – 6 Dec 1988",
@@ -840,38 +872,6 @@
         {
           "t": "EV-0108 · South Wales Echo, 1988",
           "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0108-south-wales-echo-bp-demolition-anger/"
-        }
-      ]
-    },
-    {
-      "id": "e1988s",
-      "t": 1988.95,
-      "date": "Oct 1988",
-      "title": "1988 · a wider BP portfolio sale does not include the Great House site",
-      "category": "Off-map corporate land sale",
-      "status": "dashed",
-      "reason": "press and company reporting; detailed site schedule not in the archive",
-      "text": "BP Pension Trust is reported to have sold a much wider Welsh land portfolio to Intercontinental Land & Development. The Great House Farm site itself remained in BP Properties Ltd's chain. This is an off-map corporate transaction and is not shown as a parcel transfer here.",
-      "sources": [
-        {
-          "t": "EV-0276 · press chronology for Ideal Homes, Church View Close and Persimmon",
-          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
-        }
-      ]
-    },
-    {
-      "id": "e1988l",
-      "t": 1988.97,
-      "date": "Nov 1988",
-      "title": "1988 · the Land Authority for Wales acquires other Llandough plots",
-      "category": "Off-map public-land transaction",
-      "status": "dashed",
-      "reason": "press reference; parcels not matched to the Great House titles",
-      "text": "Press reporting describes the Land Authority for Wales acquiring plots in Llandough. The plots have not been matched to the Great House Farm title plan, so this is shown as a wider landscape event, not a transfer of A1, A2 or B.",
-      "sources": [
-        {
-          "t": "The National Archives · Welsh Office board papers, WA 9/49",
-          "u": "https://discovery.nationalarchives.gov.uk/"
         }
       ]
     },
