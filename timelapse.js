@@ -92,6 +92,164 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     dust.geometry.attributes.position.needsUpdate = true; dust.visible = true; dustAt = performance.now(); }
   function houseState(demolished, modernOn) { demoAt = 0; dust.visible = false; house.visible = !modernOn; church.visible = !modernOn; [hWalls, hRoof, chim, barn, bRoof].forEach(o => { o.visible = true; }); setDemo(demolished ? 1 : 0); }
 
+
+  // ---------- symbolic standard-bearers for changing control and family presence ----------
+  // Figures are visual markers only, not evidence that soldiers were physically present.
+  const soldierLayer = new THREE.Group(); soldierLayer.visible = false; scene.add(soldierLayer);
+  const flagTexture = (welsh) => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 200; const g = c.getContext('2d');
+    if (welsh) {
+      g.fillStyle = '#fff'; g.fillRect(0, 0, 320, 100); g.fillStyle = '#168447'; g.fillRect(0, 100, 320, 100);
+      g.save(); g.translate(160, 100); g.fillStyle = '#d52835';
+      g.beginPath(); g.moveTo(-82, 54); g.bezierCurveTo(-44, 45, -40, 16, -7, 6); g.bezierCurveTo(24, -2, 26, -32, 10, -48);
+      g.bezierCurveTo(31, -44, 48, -30, 46, -11); g.lineTo(68, -28); g.lineTo(60, -2); g.lineTo(86, 3);
+      g.lineTo(59, 15); g.lineTo(73, 35); g.lineTo(43, 25); g.bezierCurveTo(30, 54, -5, 58, -26, 41);
+      g.bezierCurveTo(-42, 66, -62, 68, -82, 54); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(-4, -42); g.lineTo(-28, -63); g.lineTo(-20, -38); g.lineTo(-43, -49); g.lineTo(-25, -21); g.fill();
+      g.beginPath(); g.moveTo(29, -37); g.lineTo(50, -59); g.lineTo(46, -31); g.fill(); g.restore();
+    } else {
+      g.fillStyle = '#17345f'; g.fillRect(0, 0, 320, 200); g.lineCap = 'square';
+      g.strokeStyle = '#fff'; g.lineWidth = 34; g.beginPath(); g.moveTo(0, 0); g.lineTo(320, 200); g.moveTo(320, 0); g.lineTo(0, 200); g.stroke();
+      g.strokeStyle = '#c9233a'; g.lineWidth = 13; g.beginPath(); g.moveTo(0, 0); g.lineTo(320, 200); g.moveTo(320, 0); g.lineTo(0, 200); g.stroke();
+      g.fillStyle = '#fff'; g.fillRect(0, 77, 320, 46); g.fillRect(137, 0, 46, 200);
+      g.fillStyle = '#c9233a'; g.fillRect(0, 88, 320, 24); g.fillRect(148, 0, 24, 200);
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  };
+  const flags = {
+    welsh: new THREE.MeshBasicMaterial({ map: flagTexture(true), side: THREE.DoubleSide }),
+    union: new THREE.MeshBasicMaterial({ map: flagTexture(false), side: THREE.DoubleSide })
+  };
+  const soldierMaterials = {
+    family: new THREE.MeshStandardMaterial({ color: 0x20844a, roughness: 0.8 }),
+    familyDark: new THREE.MeshStandardMaterial({ color: 0x145d34, roughness: 0.85 }),
+    red: new THREE.MeshStandardMaterial({ color: 0xa72836, roughness: 0.8 }),
+    blue: new THREE.MeshStandardMaterial({ color: 0x233f70, roughness: 0.85 }),
+    white: new THREE.MeshStandardMaterial({ color: 0xe8e5dc, roughness: 0.8 }),
+    boots: new THREE.MeshStandardMaterial({ color: 0x29241f, roughness: 1 }),
+    skin: new THREE.MeshStandardMaterial({ color: 0xd5a17b, roughness: 0.95 })
+  };
+  const soldierGeometry = {
+    boot: new THREE.BoxGeometry(1.25, 0.62, 1.8), leg: new THREE.CylinderGeometry(0.48, 0.58, 2.0, 7),
+    torso: new THREE.CylinderGeometry(0.92, 1.18, 2.8, 8), head: new THREE.SphereGeometry(0.78, 10, 8),
+    cap: new THREE.CylinderGeometry(0.86, 0.92, 0.42, 8), arm: new THREE.CylinderGeometry(0.34, 0.42, 2.15, 7),
+    pole: new THREE.CylinderGeometry(0.075, 0.095, 7.5, 6), flag: new THREE.PlaneGeometry(4.5, 2.8),
+    strap: new THREE.BoxGeometry(2.15, 0.28, 0.12), belt: new THREE.BoxGeometry(2.15, 0.26, 1.75)
+  };
+  function soldierMesh(group, geometry, material, x, y, z, rx, ry, rz) {
+    const m = new THREE.Mesh(geometry, material); m.position.set(x || 0, y || 0, z || 0);
+    m.rotation.set(rx || 0, ry || 0, rz || 0); group.add(m); return m;
+  }
+  function pointForParcel(id, slot, radius) {
+    const p = polys.find(v => v.id === id) || polys[0];
+    const a = (slot || 0) * 2.399 + (radius ? 0.6 : 0), r = radius ? radius * (slot ? 2.2 : 0.75) : 0;
+    return [p.c[0] + Math.cos(a) * r, p.c[1] + Math.sin(a) * r];
+  }
+  function createSoldier(kind, parcelId, slot, holder, plant) {
+    const family = kind === 'family', group = new THREE.Group();
+    const jacket = family ? soldierMaterials.family : soldierMaterials.red;
+    const trousers = family ? soldierMaterials.familyDark : soldierMaterials.blue;
+    soldierMesh(group, soldierGeometry.boot, soldierMaterials.boots, -0.5, 0.35, 0.15);
+    soldierMesh(group, soldierGeometry.boot, soldierMaterials.boots, 0.5, 0.35, 0.15);
+    soldierMesh(group, soldierGeometry.leg, trousers, -0.5, 1.45, 0);
+    soldierMesh(group, soldierGeometry.leg, trousers, 0.5, 1.45, 0);
+    soldierMesh(group, soldierGeometry.torso, jacket, 0, 3.45, 0);
+    soldierMesh(group, soldierGeometry.head, soldierMaterials.skin, 0, 5.35, 0.02);
+    soldierMesh(group, soldierGeometry.cap, family ? soldierMaterials.familyDark : soldierMaterials.blue, 0, 6.05, 0);
+    soldierMesh(group, soldierGeometry.arm, jacket, -1.15, 3.75, 0, 0, 0, -0.18);
+    soldierMesh(group, soldierGeometry.arm, jacket, 1.15, 3.9, 0, 0, 0, 0.38);
+    if (!family) {
+      soldierMesh(group, soldierGeometry.strap, soldierMaterials.white, -0.05, 3.55, 0.94, 0, 0, -0.55);
+      soldierMesh(group, soldierGeometry.belt, soldierMaterials.white, 0, 2.35, 0);
+    }
+    soldierMesh(group, soldierGeometry.pole, soldierMaterials.boots, 1.3, 4.25, -0.05);
+    const flagGroup = new THREE.Group(); flagGroup.position.set(1.3, plant ? 4.3 : 6.1, -0.05); group.add(flagGroup);
+    const flag = soldierMesh(flagGroup, soldierGeometry.flag, family ? flags.welsh : flags.union, 2.3, 0, 0);
+    group.scale.setScalar(1.45);
+    const pos = pointForParcel(parcelId, slot, family ? 1 : 0);
+    group.position.set(pos[0], W.hAt(pos[0], pos[1]) + (plant ? -1.2 : 0), pos[1]); soldierLayer.add(group);
+    return { group, flag, flagGroup, kind, parcelId, holder, slot: slot || 0, targetId: parcelId,
+      from: null, to: null, moveAt: 0, moveMs: 0, plantAt: plant ? performance.now() : 0,
+      flagStartY: plant ? 4.3 : 6.1, flagTargetY: 6.1, phase: (slot || 0) * 1.7 + (family ? 0.4 : 1.2) };
+  }
+  function moveSoldier(actor, x, z, duration) {
+    actor.from = actor.group.position.clone(); actor.to = new THREE.Vector3(x, W.hAt(x, z) + 0.35, z);
+    actor.moveAt = performance.now(); actor.moveMs = duration || 1800;
+  }
+  function placeSoldier(actor, x, z) {
+    actor.group.position.set(x, W.hAt(x, z) + 0.35, z); actor.from = actor.to = null; actor.moveAt = 0;
+  }
+  const familyStartIdx = EV.findIndex(e => Object.values(e.set || {}).some(v => v && v[0] === 'family'));
+  const familyExitIdx = demIdx;
+  const familyStartIds = familyStartIdx >= 0
+    ? Object.entries(EV[familyStartIdx].set || {}).filter(entry => entry[1][0] === 'family').map(entry => entry[0]) : [];
+  const familyActors = [], britishActors = {};
+  function familyTargetFor(startId, k) {
+    let id = startId;
+    for (let j = familyStartIdx + 1; j <= k; j++) {
+      if (j === familyExitIdx) return { id: 'off', off: true };
+      const atEvent = foldTo(j);
+      if (!atEvent[id] || atEvent[id].h !== 'family') {
+        const stillHeld = polys.find(p => atEvent[p.id] && atEvent[p.id].h === 'family');
+        // If title parcels are exhausted, retain the family figures at the farmhouse to represent
+        // continuing family presence/occupation until 1988, not registered title.
+        id = stillHeld ? stillHeld.id : 'AM';
+      }
+    }
+    return { id, off: false };
+  }
+  function offLandPoint(slot) { return [cx - span * 0.78 + (slot - 1) * 8, cz + span * 0.78 + (slot - 1) * 6]; }
+  function removeSoldier(actor) { if (actor && actor.group.parent) actor.group.parent.remove(actor.group); }
+  function syncSoldiers(k, animate) {
+    const stateAt = foldTo(k);
+    if (k < familyStartIdx) {
+      while (familyActors.length) removeSoldier(familyActors.pop());
+    } else {
+      while (familyActors.length < familyStartIds.length) {
+        const n = familyActors.length, id = familyStartIds[n];
+        familyActors.push(createSoldier('family', id, n, 'Williams–Buckler family', false));
+      }
+      familyActors.forEach((actor, n) => {
+        const target = familyTargetFor(actor.parcelId, k);
+        const pt = target.off ? offLandPoint(n) : pointForParcel(target.id, n, 1);
+        if (actor.targetId !== target.id) {
+          actor.targetId = target.id;
+          if (animate) moveSoldier(actor, pt[0], pt[1], target.off ? 3600 : 1900);
+          else placeSoldier(actor, pt[0], pt[1]);
+        } else if (!animate && !actor.from) placeSoldier(actor, pt[0], pt[1]);
+      });
+    }
+    polys.forEach((p, n) => {
+      const h = stateAt[p.id] ? stateAt[p.id].h : 'bute';
+      if (h === 'family') {
+        if (britishActors[p.id]) { removeSoldier(britishActors[p.id]); delete britishActors[p.id]; }
+        return;
+      }
+      if (!britishActors[p.id] || britishActors[p.id].holder !== h) {
+        if (britishActors[p.id]) removeSoldier(britishActors[p.id]);
+        britishActors[p.id] = createSoldier('british', p.id, n, h, animate);
+      }
+    });
+  }
+  function updateSoldierActors(now) {
+    familyActors.concat(Object.values(britishActors)).forEach(actor => {
+      if (actor.from && actor.to) {
+        const p = Math.min(1, (now - actor.moveAt) / actor.moveMs), e = p * p * (3 - 2 * p);
+        actor.group.position.lerpVectors(actor.from, actor.to, e);
+        actor.group.position.y += Math.sin(p * Math.PI * 8) * (1 - p) * 0.35;
+        if (p >= 1) { actor.from = actor.to = null; actor.moveAt = 0; }
+      }
+      if (actor.plantAt) {
+        const p = Math.min(1, (now - actor.plantAt) / 1050), e = p * p * (3 - 2 * p);
+        actor.flagGroup.position.y = actor.flagStartY + (actor.flagTargetY - actor.flagStartY) * e;
+        actor.flag.scale.y = Math.max(0.04, e);
+        if (p >= 1) { actor.plantAt = 0; actor.flagGroup.position.y = actor.flagTargetY; actor.flag.scale.y = 1; }
+      }
+      const dx = camera.position.x - actor.group.position.x, dz = camera.position.z - actor.group.position.z;
+      actor.flag.rotation.y = Math.atan2(dx, dz); actor.flag.rotation.z = Math.sin(now / 620 + actor.phase) * 0.035;
+    });
+  }
+
   // ---------- modern buildings (OpenStreetMap) are gated by year ----------
   let fadeAt = 0;
   const bmat = () => { const b = world.buildings; return b ? [b.mesh.material, b.keepMesh && b.keepMesh.material].filter(Boolean) : []; };
@@ -110,19 +268,26 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   track.append(head);
   const ends = el('div'); ends.id = 'tlends'; ends.append(el('span', null, '1877'), el('span', null, 'today')); ends.style.top = '-2px'; track.append(ends);
   const speed = el('select'); speed.id = 'tlspd'; speed.setAttribute('aria-label', 'Speed'); [['0.5', '½×'], ['1', '1×'], ['2', '2×'], ['4', '4×']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; if (v === '1') o.selected = true; speed.append(o); });
-  const loopL = el('label'); const loop = el('input'); loop.type = 'checkbox'; loop.checked = true; loopL.append(loop, 'Loop');
-  const parL = el('label'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
-  const exit = el('button', null, 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world'; exit.style.padding = '3px 8px';
-  bar.append(play, year, track, speed, loopL, parL, exit); root.append(bar);
-  const legend = el('div'); legend.id = 'tllegend'; root.append(legend);
+  const speedL = el('label', 'tloption'); speedL.append(el('span', null, 'Speed'), speed);
+  const loopL = el('label', 'tloption'); const loop = el('input'); loop.type = 'checkbox'; loop.checked = true; loopL.append(loop, 'Loop');
+  const parL = el('label', 'tloption'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
+  let narrationOn = true, audioUnlocked = false, pendingHeadline = '', currentEvent = -1;
+  const narrationBtn = el('button', 'tloptionbtn', 'Narration: On'); narrationBtn.type = 'button';
+  narrationBtn.title = 'Speak event headlines in English using the closest available Welsh or UK female voice on this device';
+  const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
+  const more = el('details'); more.id = 'tlmore'; more.append(el('summary', null, 'Options'));
+  const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, exit); more.append(moreBody);
+  bar.append(play, year, track, more); root.append(bar);
+  const legend = el('details'); legend.id = 'tllegend'; const legendTitle = el('summary', null, 'Land & standards');
+  const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); root.append(legend);
   const modal = el('div'); modal.id = 'tlmodal'; modal.hidden = true; modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-live', 'polite'); root.append(modal);
 
   function updateLegend() {
-    legend.replaceChildren(el('b', null, split ? 'Who held the land' : 'Tŷ Mawr land, before 1877'));
-    if (!split) { const d = el('div'); const i = el('i', 'd'); i.style.background = TL.holders.bute.col; d.append(i, 'One holding · Bute Estate'); legend.append(d); }
+    legendBody.replaceChildren(el('b', null, split ? 'Who held the land' : 'Tŷ Mawr land, before 1877'));
+    if (!split) { const d = el('div'); const i = el('i', 'd'); i.style.background = TL.holders.bute.col; d.append(i, 'One holding · Bute Estate'); legendBody.append(d); }
     else polys.forEach(p => { const c = cur[p.id], H = TL.holders[c.h], d = el('div'); const i = el('i', c.s === 'dashed' ? 'd' : ''); i.style.background = rgba(H.col, 0.8); i.style.borderColor = dark(H.col);
-      d.append(i, `${TL.parcels[p.id]} · ${H.short}${curNote[p.id] ? ' (' + curNote[p.id] + ')' : ''}`); legend.append(d); });
-    legend.append(el('small', null, 'Solid outline: a record has been seen. Dashed: the family’s case, or a record not yet seen.'));
+      d.append(i, TL.parcels[p.id] + ' · ' + H.short + (curNote[p.id] ? ' (' + curNote[p.id] + ')' : '')); legendBody.append(d); });
+    legendBody.append(el('small', null, 'Solid outline: a record has been seen. Dashed: the family’s case, or a record not yet seen. Green figures show continuing Williams family presence, not registered title. Figures and flags are symbolic, not a claim that soldiers were physically present.'));
   }
 
   // ---------- modal ----------
@@ -132,30 +297,60 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const e = EV[i]; modalIdx = i; modal.hidden = false; modal.className = e.status === 'dashed' ? 'dashed' : ''; modal.replaceChildren();
     const x = el('button', 'tlx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeModal);
     modal.append(x, el('div', 'tld', e.date), el('h3', null, e.title),
-      el('span', 'tlst', e.status === 'dashed' ? 'Not established' + (e.reason ? ' · ' + e.reason : '') : 'Record seen'), el('p', null, e.text));
-    const ch = Object.entries(e.set || {}); if (ch.length) modal.append(el('p', 'tlch', 'On the map: ' + ch.map(([id, [h]]) => `${TL.parcels[id]} → ${TL.holders[h].short}`).join('; ') + '.'));
-    if (e.sources && e.sources.length) { modal.append(el('div', 'tld', 'Archive records')); const ul = el('ul');
-      e.sources.forEach(s => { const li = el('li'), a = el('a', null, s.t); a.href = s.u; a.target = '_blank'; a.rel = 'noopener'; li.append(a); ul.append(li); }); modal.append(ul); }
+      el('span', 'tlst', e.status === 'dashed' ? 'Not established' + (e.reason ? ' · ' + e.reason : '') : 'Record seen'));
+    const detail = el('details', 'tleventdetails'); detail.append(el('summary', null, 'Event details & archive records'));
+    const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
+    const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'On the map: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short).join('; ') + '.'));
+    if (e.sources && e.sources.length) { body.append(el('div', 'tld', 'Archive records')); const ul = el('ul');
+      e.sources.forEach(s => { const li = el('li'), a = el('a', null, s.t); a.href = s.u; a.target = '_blank'; a.rel = 'noopener'; li.append(a); ul.append(li); }); body.append(ul); }
+    detail.append(body); modal.append(detail);
     const nx = el('button', 'tlnext', 'Next event ▸'); nx.type = 'button'; nx.addEventListener('click', () => { dwell = 0.001; }); modal.append(nx);
     bar2 = el('div', 'tlbar2'); modal.append(bar2);
   }
   function closeModal() { modal.hidden = true; modalIdx = -1; dwell = 0; }
 
+  // Use the closest installed Welsh-English/UK female browser voice for event headlines.
+  const speechAvailable = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  function chooseNarrationVoice() {
+    if (!speechAvailable) return null;
+    const all = speechSynthesis.getVoices(), english = all.filter(v => /^en([_-]|$)/i.test(v.lang || ''));
+    const welshUK = english.filter(v => /welsh|wales|cymru|en[-_]gb[-_]wls/i.test(v.name + ' ' + v.lang));
+    const uk = english.filter(v => /^en[-_]gb/i.test(v.lang || '') || /united kingdom|\buk\b/i.test(v.name));
+    const feminine = v => /female|libby|hazel|sarah|sonia|serena|heather|kate|emma|amy|moira|fiona|gwen|sian|siân|victoria/i.test(v.name);
+    return welshUK.find(feminine) || welshUK[0] || uk.find(feminine) || uk[0] || english.find(feminine) || english[0] || null;
+  }
+  function speakHeadline(title) {
+    pendingHeadline = title || pendingHeadline;
+    if (!narrationOn || !speechAvailable || !audioUnlocked || !pendingHeadline) return;
+    speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(pendingHeadline.replace(/·/g, ', '));
+    utterance.lang = 'en-GB'; utterance.rate = 0.91; utterance.pitch = 1.04;
+    const voice = chooseNarrationVoice(); if (voice) { utterance.voice = voice; utterance.lang = voice.lang || 'en-GB'; }
+    speechSynthesis.speak(utterance); pendingHeadline = '';
+  }
+  function narrateHeadline(title) { pendingHeadline = title; speakHeadline(title); }
+  if (!speechAvailable) { narrationBtn.textContent = 'Narration unavailable'; narrationBtn.disabled = true; narrationBtn.title = 'This browser does not provide speech synthesis'; }
+  else if (speechSynthesis.getVoices().length === 0) speechSynthesis.addEventListener('voiceschanged', () => { chooseNarrationVoice(); });
+  narrationBtn.addEventListener('click', () => {
+    audioUnlocked = true; narrationOn = !narrationOn; narrationBtn.textContent = narrationOn ? 'Narration: On' : 'Narration: Off';
+    if (!narrationOn && speechAvailable) speechSynthesis.cancel();
+    else if (narrationOn) speakHeadline(currentEvent >= 0 ? EV[currentEvent].title : pendingHeadline);
+  });
+
   // ---------- control ----------
   let on = false, playing = false, t = START, idx = 0, last = performance.now(), flashT = 0;
-  function setPlaying(p) { playing = p; play.textContent = p ? '■ Stop' : '▶ Play'; play.setAttribute('aria-pressed', String(p)); }
+  function setPlaying(p) { playing = p; play.textContent = p ? 'Ⅱ Pause' : '▶ Play'; play.setAttribute('aria-pressed', String(p)); }
   function applyInstant(k) { // state of the world after events 0..k, no animation
     cur = foldTo(k); curNote = noteFor(k); split = k >= 1;
-    const dem = demIdx >= 0 && k >= demIdx, mod = modIdx >= 0 && k >= modIdx; houseState(dem, mod); setModern(mod, false); flash = null; flashOn = false; redraw(); updateLegend();
+    const dem = demIdx >= 0 && k >= demIdx, mod = modIdx >= 0 && k >= modIdx; houseState(dem, mod); setModern(mod, false); syncSoldiers(k, false); flash = null; flashOn = false; redraw(); updateLegend();
   }
   function trigger(i) {
-    const e = EV[i]; cur = foldTo(i); curNote = noteFor(i); if (i >= 1) split = true; if (i === 0) { split = false; applyInstant(0); split = false; redraw(); updateLegend(); }
+    const e = EV[i]; currentEvent = i; cur = foldTo(i); curNote = noteFor(i); if (i >= 1) split = true; if (i === 0) { split = false; applyInstant(0); split = false; redraw(); updateLegend(); }
     if (i === 0) W.flyTo('tl_aerial');
     if (e.demolish) { houseState(false, false); demoAt = performance.now(); startDust(); W.flyTo('tl_house'); }
     else if (i === demIdx + 1 && demIdx >= 0) W.flyTo('tl_aerial');
     if (e.modern) { house.visible = false; church.visible = false; rubble.visible = false; setModern(true, true); }
     const ids = Object.keys(e.set || {}); flash = ids.length ? { ids, until: performance.now() + 2600 } : null; flashOn = !!flash; flashT = performance.now();
-    redraw(); updateLegend(); showModal(i); dwellTotal = dwell = dwellFor(e);
+    syncSoldiers(i, true); redraw(); updateLegend(); showModal(i); narrateHeadline(e.title); dwellTotal = dwell = dwellFor(e);
   }
   function seek(nt) { // scrub to a year, no modal
     t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; closeModal(); applyInstant(k);
@@ -167,12 +362,12 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     else { setPlaying(false); }
   }
   function setMode(m) {
-    on = m; root.classList.toggle('tl', m); stage.visible = m; legend.hidden = !m; bar.querySelectorAll('select,label,#tltrack,#tlyear').forEach(n => n.hidden = !m);
+    on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; legend.hidden = !m; bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
     exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1877 → today timelapse';
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
   }
-  play.addEventListener('click', () => { if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
+  play.addEventListener('click', () => { audioUnlocked = true; if (pendingHeadline && narrationOn) speakHeadline(pendingHeadline); if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
   exit.addEventListener('click', () => setMode(!on));
   parOn.addEventListener('change', () => { if (on) { ovl.custom = parOn.checked ? custom : () => {}; redraw(); } });
   const trackT = ev => { const r = track.getBoundingClientRect(); return START + Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * (END - START); };
@@ -197,6 +392,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     if (dust.visible) { const q = (now - dustAt) / 6000; if (q >= 1) dust.visible = false; else { for (let i = 0; i < NP; i++) { dpos[i * 3] += dvel[i * 3] * dt; dpos[i * 3 + 1] += dvel[i * 3 + 1] * dt; dpos[i * 3 + 2] += dvel[i * 3 + 2] * dt; }
       dust.geometry.attributes.position.needsUpdate = true; dust.material.opacity = Math.min(0.55, q * 6) * (1 - q); dust.material.size = 7 + q * 14; } }
     if (fadeAt) { const k = Math.min(1, (now - fadeAt) / 3000); bmat().forEach(m => { m.opacity = k; }); if (k >= 1) fadeAt = 0; }
+    updateSoldierActors(now);
   }
   requestAnimationFrame(frameTl);
 
