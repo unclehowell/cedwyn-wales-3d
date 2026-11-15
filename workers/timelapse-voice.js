@@ -107,7 +107,8 @@ export default {
       ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
       return response;
     } catch (error) {
-      console.error("Timelapse voice generation failed", error);\n      return new Response("Narration generation failed", { status: 502, headers: cors(origin) });
+      console.error("Timelapse voice generation failed", error);
+      return new Response("Narration generation failed", { status: 502, headers: cors(origin) });
     }
   }
 };
