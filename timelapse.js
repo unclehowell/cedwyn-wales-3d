@@ -117,8 +117,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
   };
   const flags = {
-    welsh: new THREE.MeshBasicMaterial({ map: flagTexture(true), side: THREE.DoubleSide }),
-    union: new THREE.MeshBasicMaterial({ map: flagTexture(false), side: THREE.DoubleSide })
+    welsh: new THREE.SpriteMaterial({ map: flagTexture(true), transparent: false }),
+    union: new THREE.SpriteMaterial({ map: flagTexture(false), transparent: false })
   };
   const soldierMaterials = {
     family: new THREE.MeshStandardMaterial({ color: 0x20844a, roughness: 0.8 }),
@@ -164,13 +164,13 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     }
     soldierMesh(group, soldierGeometry.pole, soldierMaterials.boots, 1.3, 4.25, -0.05);
     const flagGroup = new THREE.Group(); flagGroup.position.set(1.3, plant ? 4.3 : 6.1, -0.05); group.add(flagGroup);
-    const flag = soldierMesh(flagGroup, soldierGeometry.flag, family ? flags.welsh : flags.union, 2.3, 0, 0);
+    const flag = new THREE.Sprite(family ? flags.welsh : flags.union); flag.position.set(2.3, 0, 0); flag.scale.set(6.2, 3.9, 1); flagGroup.add(flag);
     group.scale.setScalar(2.1);
     const pos = pointForParcel(parcelId, slot, family ? 1 : 0);
     group.position.set(pos[0], W.hAt(pos[0], pos[1]) + (plant ? -1.2 : 0), pos[1]); soldierLayer.add(group);
     return { group, flag, flagGroup, kind, parcelId, holder, slot: slot || 0, targetId: parcelId,
       from: null, to: null, moveAt: 0, moveMs: 0, plantAt: plant ? performance.now() : 0,
-      flagStartY: plant ? 4.3 : 6.1, flagTargetY: 6.1, phase: (slot || 0) * 1.7 + (family ? 0.4 : 1.2) };
+      flagStartY: plant ? 4.3 : 6.1, flagTargetY: 6.1, flagScaleY: 3.9, phase: (slot || 0) * 1.7 + (family ? 0.4 : 1.2) };
   }
   function moveSoldier(actor, x, z, duration) {
     actor.from = actor.group.position.clone(); actor.to = new THREE.Vector3(x, W.hAt(x, z) + 0.35, z);
@@ -242,11 +242,11 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       if (actor.plantAt) {
         const p = Math.min(1, (now - actor.plantAt) / 1050), e = p * p * (3 - 2 * p);
         actor.flagGroup.position.y = actor.flagStartY + (actor.flagTargetY - actor.flagStartY) * e;
-        actor.flag.scale.y = Math.max(0.04, e);
-        if (p >= 1) { actor.plantAt = 0; actor.flagGroup.position.y = actor.flagTargetY; actor.flag.scale.y = 1; }
+        actor.flag.scale.y = actor.flagScaleY * Math.max(0.04, e);
+        if (p >= 1) { actor.plantAt = 0; actor.flagGroup.position.y = actor.flagTargetY; actor.flag.scale.y = actor.flagScaleY; }
       }
       const dx = camera.position.x - actor.group.position.x, dz = camera.position.z - actor.group.position.z;
-      actor.flag.rotation.y = Math.atan2(dx, dz); actor.flag.rotation.z = Math.sin(now / 620 + actor.phase) * 0.035;
+      actor.flag.rotation.z = Math.sin(now / 620 + actor.phase) * 0.035;
     });
   }
 
@@ -279,7 +279,10 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, exit); more.append(moreBody);
   bar.append(play, year, track, more); root.append(bar);
   const legend = el('details'); legend.id = 'tllegend'; const legendTitle = el('summary', null, 'Land & standards');
-  const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); root.append(legend);
+  const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); moreBody.append(legend);
+  legend.open = false; more.open = false;
+  const layerDetails = $('#w3dctl'); if (layerDetails) layerDetails.open = false;
+  const creditDetails = $('#w3dcred'); if (creditDetails) creditDetails.open = false;
   const modal = el('div'); modal.id = 'tlmodal'; modal.hidden = true; modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-live', 'polite'); root.append(modal);
 
   function updateLegend() {
@@ -298,7 +301,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const x = el('button', 'tlx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeModal);
     modal.append(x, el('div', 'tld', e.date), el('h3', null, e.title),
       el('span', 'tlst', e.status === 'dashed' ? 'Not established' + (e.reason ? ' · ' + e.reason : '') : 'Record seen'));
-    const detail = el('details', 'tleventdetails'); detail.append(el('summary', null, 'Event details & archive records'));
+    const detail = el('details', 'tleventdetails'); detail.open = false; detail.append(el('summary', null, 'Event details & archive records'));
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'On the map: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short).join('; ') + '.'));
     if (e.sources && e.sources.length) { body.append(el('div', 'tld', 'Archive records')); const ul = el('ul');
