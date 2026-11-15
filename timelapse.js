@@ -27,7 +27,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   polys.forEach(p => p.rings[0].forEach(([x, z]) => { bb.x0 = Math.min(bb.x0, x); bb.x1 = Math.max(bb.x1, x); bb.z0 = Math.min(bb.z0, z); bb.z1 = Math.max(bb.z1, z); }));
   const cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2, span = Math.max(bb.x1 - bb.x0, bb.z1 - bb.z0);
   const ah = world.anchors.tymawr || [cx, cz];
-  W.views.tl_aerial = [cx, cz, Math.max(260, span * 1.9), 63, 0];   // north up, like a map
+  W.views.tl_aerial = [cx, cz, Math.max(220, span * 1.35), 63, 0];   // tighter north-up framing so standard-bearers read on phones
   W.views.tl_house = [ah[0], ah[1], 105, 24, 140];
 
   // ---------- state of the land for a given event index ----------
@@ -142,7 +142,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function pointForParcel(id, slot, radius) {
     const p = polys.find(v => v.id === id) || polys[0];
-    const a = (slot || 0) * 2.399 + (radius ? 0.6 : 0), r = radius ? radius * (slot ? 2.2 : 0.75) : 0;
+    const a = (slot || 0) * 2.399 + (radius ? 0.6 : 0), r = radius ? radius * (slot ? 6.2 : 2.4) : 0;
     return [p.c[0] + Math.cos(a) * r, p.c[1] + Math.sin(a) * r];
   }
   function createSoldier(kind, parcelId, slot, holder, plant) {
@@ -165,7 +165,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     soldierMesh(group, soldierGeometry.pole, soldierMaterials.boots, 1.3, 4.25, -0.05);
     const flagGroup = new THREE.Group(); flagGroup.position.set(1.3, plant ? 4.3 : 6.1, -0.05); group.add(flagGroup);
     const flag = soldierMesh(flagGroup, soldierGeometry.flag, family ? flags.welsh : flags.union, 2.3, 0, 0);
-    group.scale.setScalar(1.45);
+    group.scale.setScalar(2.1);
     const pos = pointForParcel(parcelId, slot, family ? 1 : 0);
     group.position.set(pos[0], W.hAt(pos[0], pos[1]) + (plant ? -1.2 : 0), pos[1]); soldierLayer.add(group);
     return { group, flag, flagGroup, kind, parcelId, holder, slot: slot || 0, targetId: parcelId,
