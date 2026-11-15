@@ -83,21 +83,31 @@ export default {
         language_code: "en",
         output_format: "mp3_44100_128"
       });
-      const audioUrl = result && (result.audio || (result.result && result.result.audio));
-      if (!audioUrl) throw new Error("TTS model returned no audio URL");
-      const audioResponse = await fetch(audioUrl);
-      if (!audioResponse.ok) throw new Error("Audio fetch failed: " + audioResponse.status);
+      const audioData = result && (result.audio || (result.result && result.result.audio));
+      if (!audioData || typeof audioData !== "string") throw new Error("TTS model returned no audio");
+      let audioBytes;
+      if (audioData.startsWith("data:")) {
+        const comma = audioData.indexOf(",");
+        if (comma < 0) throw new Error("Malformed audio data URI");
+        const binary = atob(audioData.slice(comma + 1));
+        audioBytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) audioBytes[i] = binary.charCodeAt(i);
+      } else {
+        const audioResponse = await fetch(audioData);
+        if (!audioResponse.ok) throw new Error("Audio fetch failed: " + audioResponse.status);
+        audioBytes = await audioResponse.arrayBuffer();
+      }
       const headers = new Headers({
         "Content-Type": "audio/mpeg",
         "Cache-Control": "public, max-age=31536000, s-maxage=31536000",
         "X-Cedwyn-Voice": "Eldrin · British baritone",
         ...cors(origin)
       });
-      const response = new Response(audioResponse.body, { headers });
+      const response = new Response(audioBytes, { headers });
       ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
       return response;
     } catch (error) {
-      return new Response("Narration generation failed", { status: 502, headers: cors(origin) });
+      console.error("Timelapse voice generation failed", error);\n      return new Response("Narration generation failed", { status: 502, headers: cors(origin) });
     }
   }
 };
