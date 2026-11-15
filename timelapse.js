@@ -1,7 +1,7 @@
-// Wales 3D world v0.7.0 — the 1535 → today land, lordship, title and occupation timelapse.
+// Wales 3D world v0.8.0 — the 1535 → today land, lordship, title and occupation timelapse.
 // The 3D world stays a normal, orbitable 3D world; this layer adds a play bar along the top, redraws the family's land
 // parcels on the terrain for each year, shows the archive record for each event in a modal, and loops.
-// Data: data/timeline.json (events, holders, sources) and data/family-parcels.geojson (the four parcels, EPSG:4326).
+// Data: timeline.json, family-parcels.geojson and parcels59.json (59 historical plan references; 44 drawn outlines).
 // Status shown on every event: solid = a record has been seen; dashed = the family's case or a record not yet seen.
 // URL: ?tl=0 starts the normal world with the timelapse off; ?tl=pause opens it paused.
 const DATA = (document.querySelector('meta[name=w3d-data]') || {}).content || new URL('data/', import.meta.url).href;
@@ -11,10 +11,11 @@ const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls)
 const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r => addEventListener('w3d:ready', () => r(window.__w3d), { once: true }));
 
 (async function () {
-  const [W, TL, GJ] = await Promise.all([ready(), fetch(DATA + 'timeline.json?v=0.7.0').then(r => r.json()), fetch(DATA + 'family-parcels.geojson?v=0.7.0').then(r => r.json())]);
+  const [W, TL, GJ, HIST] = await Promise.all([ready(), fetch(DATA + 'timeline.json?v=0.8.0').then(r => r.json()), fetch(DATA + 'family-parcels.geojson?v=0.8.0').then(r => r.json()), fetch(DATA + 'parcels59.json?v=0.8.0').then(r => r.json())]);
   const { THREE, scene, camera, controls, world, ovl } = W;
   const root = $('#w3d'); if (!root) return;
   const EV = TL.events, START = TL.start, END = TL.end, RATE = 3.7; // years of story per second at 1×
+  const histPlanIdx = EV.findIndex(e => e.id === 'e1824'), histIdx = EV.findIndex(e => e.id === 'e1841');
   const demIdx = EV.findIndex(e => e.demolish), modIdx = EV.findIndex(e => e.modern), splitIdx = EV.findIndex(e => e.id === 'e1877');
 
   // ---------- parcels in world coordinates ----------
@@ -23,26 +24,72 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     let sx = 0, sz = 0; rings[0].forEach(p => { sx += p[0]; sz += p[1]; });
     return { id: f.properties.id, rings, c: [sx / rings[0].length, sz / rings[0].length] };
   });
+
+  // Historic plan outlines share the terrain's local X/Z coordinate frame (E-317000, 174000-N).
+  const histParcels = (HIST.parcels || []).map(p => {
+    const rings = Array.isArray(p.rings) ? p.rings : [];
+    const ring = rings[0] || [];
+    let sx = 0, sz = 0; ring.forEach(([x, z]) => { sx += x; sz += z; });
+    const owners = (p.owner || '').split(';').map(v => v.trim()).filter(Boolean);
+    const occupiers = (p.occ || '').split(';').map(v => v.trim()).filter(Boolean);
+    const familyCount = occupiers.filter(v => /Williams/i.test(v)).length;
+    const familyOccupier = occupiers.length > 0 && familyCount === occupiers.length;
+    const mixedFamily = familyCount > 0 && familyCount < occupiers.length;
+    const ownerSet = [...new Set(owners)];
+    const owner = ownerSet.length === 1 ? ownerSet[0] : '';
+    const ownerColour = /Bute/i.test(owner) ? '#c58a2d' : /(Evans|Glebe)/i.test(owner) ? '#8658aa' : /Railway/i.test(owner) ? '#667d9f' : '#7a8794';
+    return { ...p, id: String(p.id || p.label || ''), rings, c: ring.length ? [sx / ring.length, sz / ring.length] : null,
+      owners, occupiers, familyOccupier, mixedFamily, owner, ownerSet, ownerColour };
+  });
+  const histDrawn = histParcels.filter(p => p.rings.length && p.rings[0].length >= 3);
+  const histBB = { x0: 1e9, x1: -1e9, z0: 1e9, z1: -1e9 };
+  histDrawn.forEach(p => p.rings[0].forEach(([x, z]) => { histBB.x0 = Math.min(histBB.x0, x); histBB.x1 = Math.max(histBB.x1, x); histBB.z0 = Math.min(histBB.z0, z); histBB.z1 = Math.max(histBB.z1, z); }));
+  const histCx = (histBB.x0 + histBB.x1) / 2, histCz = (histBB.z0 + histBB.z1) / 2;
+  const histSpan = Math.max(histBB.x1 - histBB.x0, histBB.z1 - histBB.z0);
   const bb = { x0: 1e9, x1: -1e9, z0: 1e9, z1: -1e9 };
   polys.forEach(p => p.rings[0].forEach(([x, z]) => { bb.x0 = Math.min(bb.x0, x); bb.x1 = Math.max(bb.x1, x); bb.z0 = Math.min(bb.z0, z); bb.z1 = Math.max(bb.z1, z); }));
   const cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2, span = Math.max(bb.x1 - bb.x0, bb.z1 - bb.z0);
   const ah = world.anchors.tymawr || [cx, cz];
   W.views.tl_aerial = [cx, cz, Math.max(220, span * 1.35), 63, 0];   // tighter north-up framing so standard-bearers read on phones
   W.views.tl_house = [ah[0], ah[1], 105, 24, 140];
+  W.views.tl_history = [histCx, histCz, Math.max(2100, histSpan * 1.5), 63, 0];
 
   // ---------- state of the land for a given event index ----------
   const initial = () => Object.fromEntries(polys.map(p => [p.id, { h: 'unknown', s: 'dashed' }]));
   function foldTo(k) { const cur = initial(); for (let i = 0; i <= k; i++) Object.entries(EV[i].set || {}).forEach(([id, [h, s]]) => { cur[id] = { h, s }; }); return cur; }
   const noteFor = k => { const o = {}; for (let i = 0; i <= k; i++) Object.assign(o, EV[i].note || {}); return o; };
-  let cur = foldTo(-1), curNote = {}, split = false;
+  let cur = foldTo(-1), curNote = {}, split = false, planMode = false, historyInfo = false;
 
   // ---------- overlay drawing (the terrain's overlay texture) ----------
   const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${a})`; };
   const dark = hex => { const n = parseInt(hex.slice(1), 16); return `rgb(${(n >> 16) * 0.45 | 0},${(n >> 8 & 255) * 0.45 | 0},${(n & 255) * 0.45 | 0})`; };
   let flash = null, flashOn = false;
+
   function custom(g, X, Y, S) {
     const path = p => { g.beginPath(); p.rings.forEach(r => { r.forEach(([x, z], i) => i ? g.lineTo(X(x), Y(z)) : g.moveTo(X(x), Y(z))); g.closePath(); }); };
-    if (!split) { // before 1877 the ground is one holding: one fill, no inner lines
+    if (planMode) {
+      histDrawn.forEach(p => {
+        path(p);
+        const fill = !historyInfo ? TL.holders.unknown.col : p.familyOccupier ? '#21864e' : p.mixedFamily ? '#a78a44' : '#778493';
+        g.fillStyle = rgba(fill, historyInfo ? (p.familyOccupier ? 0.34 : 0.13) : 0.055);
+        g.fill('evenodd');
+        g.lineJoin = 'round'; g.lineWidth = historyInfo ? 2.8 : 2.0;
+        g.strokeStyle = historyInfo ? p.ownerColour : 'rgba(220,230,240,.8)';
+        const uncertain = !p.read || p.read === 'unclear' || p.read === 'not read' || p.mixedFamily || p.ownerSet.length > 1;
+        g.setLineDash(uncertain ? [10, 7] : []); g.stroke(); g.setLineDash([]);
+      });
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 11px system-ui,sans-serif';
+      histDrawn.forEach(p => {
+        const label = p.label || p.id;
+        g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(label, X(p.c[0]), Y(p.c[1]));
+        g.fillStyle = '#fff'; g.fillText(label, X(p.c[0]), Y(p.c[1]));
+      });
+      if (!historyInfo) {
+        const label = '1824 Stewart survey · 59 references · 44 mapped outlines';
+        g.font = '700 18px system-ui,sans-serif'; g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.8)';
+        g.strokeText(label, X(histCx), Y(histBB.z0 - 45)); g.fillStyle = '#fff'; g.fillText(label, X(histCx), Y(histBB.z0 - 45));
+      }
+    } else if (!split) {
       g.beginPath(); polys.forEach(p => p.rings.forEach(r => { r.forEach(([x, z], i) => i ? g.lineTo(X(x), Y(z)) : g.moveTo(X(x), Y(z))); g.closePath(); }));
       g.fillStyle = rgba(TL.holders.unknown.col, 0.28); g.fill('evenodd');
     } else polys.forEach(p => {
@@ -50,9 +97,11 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       const hot = flashOn && flash && flash.ids.includes(p.id);
       g.lineJoin = 'round'; g.lineWidth = hot ? 9 : 5; g.strokeStyle = hot ? '#fff6a8' : dark(H.col); g.setLineDash(c.s === 'dashed' ? [24, 15] : []); g.stroke(); g.setLineDash([]);
     });
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 15px system-ui,sans-serif';
-    polys.forEach(p => { if (!split && p.id !== 'AM') return; const t = split ? TL.parcels[p.id] : 'Tŷ Mawr · historic extent not mapped';
-      g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText(t, X(p.c[0]), Y(p.c[1])); g.fillStyle = '#fff'; g.fillText(t, X(p.c[0]), Y(p.c[1])); });
+    if (!planMode) {
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 15px system-ui,sans-serif';
+      polys.forEach(p => { if (!split && p.id !== 'AM') return; const t = split ? TL.parcels[p.id] : 'Tŷ Mawr · historic extent not mapped';
+        g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText(t, X(p.c[0]), Y(p.c[1])); g.fillStyle = '#fff'; g.fillText(t, X(p.c[0]), Y(p.c[1])); });
+    }
   }
   const redraw = () => W.drawOverlay();
 
@@ -145,7 +194,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const a = (slot || 0) * 2.399 + (radius ? 0.6 : 0), r = radius ? radius * (slot ? 8 : 3) : 0;
     return [p.c[0] + Math.cos(a) * r, p.c[1] + Math.sin(a) * r];
   }
-  function createSoldier(kind, parcelId, slot, holder, plant) {
+  function createSoldier(kind, parcelId, slot, holder, plant, anchor, figureScale) {
     const family = kind === 'family', group = new THREE.Group();
     const jacket = family ? soldierMaterials.family : soldierMaterials.red;
     const trousers = family ? soldierMaterials.familyDark : soldierMaterials.blue;
@@ -165,8 +214,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     soldierMesh(group, soldierGeometry.pole, soldierMaterials.boots, 1.3, 4.25, -0.05);
     const flagGroup = new THREE.Group(); flagGroup.position.set(1.3, plant ? 4.3 : 6.1, -0.05); group.add(flagGroup);
     const flag = new THREE.Sprite(family ? flags.welsh : flags.union); flag.position.set(2.3, 0, 0); flag.scale.set(6.2, 3.9, 1); flagGroup.add(flag);
-    group.scale.setScalar(3.0);
-    const pos = pointForParcel(parcelId, slot, family ? 1 : 0);
+    group.scale.setScalar(figureScale || 3.0);
+    const pos = anchor || pointForParcel(parcelId, slot, family ? 1 : 0);
     group.position.set(pos[0], W.hAt(pos[0], pos[1]) + (plant ? -1.2 : 0), pos[1]); soldierLayer.add(group);
     return { group, flag, flagGroup, kind, parcelId, holder, slot: slot || 0, targetId: parcelId,
       from: null, to: null, moveAt: 0, moveMs: 0, plantAt: plant ? performance.now() : 0,
@@ -183,7 +232,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const familyExitIdx = demIdx;
   const familyStartIds = familyStartIdx >= 0
     ? EV[familyStartIdx].occupancy.family.filter(id => polys.some(p => p.id === id)) : [];
-  const familyActors = [], britishActors = {};
+  const familyActors = [], britishActors = {}, historicalActors = [];
+  let historicalActorsBuilt = false;
   function familyOccupancyAt(k) {
     let current = [];
     for (let j = 0; j <= k; j++) if (Array.isArray(EV[j].occupancy && EV[j].occupancy.family)) current = EV[j].occupancy.family.slice();
@@ -197,8 +247,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function offLandPoint(slot) { return [cx - span * 0.78 + (slot - 1) * 8, cz + span * 0.78 + (slot - 1) * 6]; }
   function removeSoldier(actor) { if (actor && actor.group.parent) actor.group.parent.remove(actor.group); }
+
   function syncSoldiers(k, animate) {
-    const stateAt = foldTo(k);
+    const stateAt = foldTo(k), historicPlan = planMode, historicInfo = historyInfo;
     if (k < familyStartIdx) {
       while (familyActors.length) removeSoldier(familyActors.pop());
     } else {
@@ -207,6 +258,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
         familyActors.push(createSoldier('family', id, n, 'Williams family · occupation', false));
       }
       familyActors.forEach((actor, n) => {
+        actor.group.visible = !historicPlan;
         const target = familyTargetFor(actor, n, k);
         const pt = target.off ? offLandPoint(n) : pointForParcel(target.id, n, 1);
         if (actor.targetId !== target.id) {
@@ -227,9 +279,26 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
         britishActors[p.id] = createSoldier('british', p.id, n, h, animate);
       }
     });
+    Object.values(britishActors).forEach(actor => { actor.group.visible = !historicPlan; });
+
+    if (historicInfo && !historicalActorsBuilt) {
+      histDrawn.forEach((p, n) => {
+        const spread = 4.5;
+        if (p.familyOccupier) {
+          historicalActors.push(createSoldier('family', 'historic-family-' + p.id, n, 'Williams family · occupier c.1841',
+            false, [p.c[0] - spread, p.c[1] - spread], 1.65));
+        }
+        p.ownerSet.forEach((owner, k) => {
+          historicalActors.push(createSoldier('british', 'historic-owner-' + p.id, n, owner,
+            !!animate, [p.c[0] + spread + k * 2, p.c[1] + spread], 1.65));
+        });
+      });
+      historicalActorsBuilt = true;
+    }
+    historicalActors.forEach(actor => { actor.group.visible = historicInfo; });
   }
   function updateSoldierActors(now) {
-    familyActors.concat(Object.values(britishActors)).forEach(actor => {
+    familyActors.concat(Object.values(britishActors), historicalActors).forEach(actor => {
       if (actor.from && actor.to) {
         const p = Math.min(1, (now - actor.moveAt) / actor.moveMs), e = p * p * (3 - 2 * p);
         actor.group.position.lerpVectors(actor.from, actor.to, e);
@@ -285,14 +354,34 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const creditDetails = $('#w3dcred'); if (creditDetails) creditDetails.open = false;
   const modal = el('div'); modal.id = 'tlmodal'; modal.hidden = true; modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-live', 'polite'); root.append(modal);
 
-  function updateLegend() {
-    legendBody.replaceChildren(el('b', null, split ? 'Mapped parties and interests' : 'Earlier landscape · extent unresolved'));
-    if (!split) { const d = el('div'); const i = el('i', 'd'); i.style.background = TL.holders.unknown.col; d.append(i, 'Historic farm extent not mapped; lordship and freehold records are separate'); legendBody.append(d); }
-    else polys.forEach(p => { const c = cur[p.id], H = TL.holders[c.h], d = el('div'); const i = el('i', c.s === 'dashed' ? 'd' : ''); i.style.background = rgba(H.col, 0.8); i.style.borderColor = dark(H.col);
-      d.append(i, TL.parcels[p.id] + ' · ' + H.short + (curNote[p.id] ? ' (' + curNote[p.id] + ')' : '')); legendBody.append(d); });
-    legendBody.append(el('small', null, 'Colours show the party or interest identified in the dated source trail; they are not a blanket finding of freehold title. Green figures represent Williams family occupation, separately from title. Red/blue/white figures mark other recorded parties or interests. Court orders, tenancy offers and village-green registration do not themselves convey freehold. The 36 tithe plots and wider manorial estate are described in the event cards, not falsely plotted as these four shapes. All figures and flags are symbolic.'));
-  }
 
+  function updateLegend() {
+    legendBody.replaceChildren();
+    if (planMode) {
+      legendBody.append(el('b', null, historyInfo ? 'c.1841 · occupation and landowner join' : '1824 · Stewart estate-plan outlines'));
+      if (historyInfo) {
+        const rows = [
+          ['#21864e', 'Williams occupier recorded across this mapped group'],
+          ['#c58a2d', 'Bute Estate · apportionment landowner column'],
+          ['#8658aa', 'Evans / glebe · apportionment landowner column'],
+          ['#778493', 'Other / mixed occupiers or ownership not uniquely joined']
+        ];
+        rows.forEach(([colour,label]) => { const d=el('div'); const sw=el('i','d'); sw.style.background=colour; d.append(sw,label); legendBody.append(d); });
+        legendBody.append(el('small', null, histDrawn.length + ' outlines drawn from ' + histParcels.length + ' plan references; ' + (histParcels.length - histDrawn.length) + ' are unread or not placed. Labels identify plan references, not always one-to-one tithe plots. Dashed boundaries indicate unread, mixed or composite joins. Apportionment “owner” is not proof of registered freehold. Green figures mark Williams occupation; Union Jack standards mark the recorded landowner / estate interest.'));
+      } else {
+        const d=el('div'),sw=el('i','d'); sw.style.background=TL.holders.unknown.col; d.append(sw,'Historical estate-plan outlines · owner and occupier state not yet applied'); legendBody.append(d);
+        legendBody.append(el('small',null,'The estate-plan reconstruction identifies ' + histParcels.length + ' references, of which ' + histDrawn.length + ' have drawable outlines. The remaining entries are unread or not placed; they stay listed rather than being given invented boundaries.'));
+      }
+    } else if (!split) {
+      legendBody.append(el('b', null, 'Earlier landscape · extent unresolved'));
+      const d = el('div'); const i = el('i', 'd'); i.style.background = rgba(TL.holders.unknown.col, 0.28); d.append(i, 'Historic farm extent not mapped; lordship and freehold records are separate'); legendBody.append(d);
+    } else {
+      legendBody.append(el('b', null, 'Mapped parties and interests'));
+      polys.forEach(p => { const c = cur[p.id], H = TL.holders[c.h], d = el('div'); const i = el('i', c.s === 'dashed' ? 'd' : ''); i.style.background = rgba(H.col, 0.8); i.style.borderColor = dark(H.col);
+        d.append(i, TL.parcels[p.id] + ' · ' + H.short + (curNote[p.id] ? ' (' + curNote[p.id] + ')' : '')); legendBody.append(d); });
+    }
+    legendBody.append(el('small', null, 'Colours show parties or interests identified in dated sources; they are not blanket findings of freehold title. Green figures represent Williams occupation, separately from title. Red/blue/white figures show other recorded parties or interests. Court orders, tenancy offers and village-green registration do not themselves convey freehold. All figures and flags are symbolic.'));
+  }
   // ---------- modal ----------
   let modalIdx = -1, dwell = 0, dwellTotal = 1, bar2 = null;
   function dwellFor(e) { return (e.dwell || (6.5 + e.text.length / 110)) / Number(speed.value); }
@@ -305,6 +394,22 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'Mapped party / interest: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short + ' [' + (entry[1][1] === 'dashed' ? 'reconstructed / not fully established' : 'source seen') + ']').join('; ') + '.'));
     if (e.occupancy && Array.isArray(e.occupancy.family)) body.append(el('p', 'tlch', 'Williams family occupation shown on: ' + (e.occupancy.family.length ? e.occupancy.family.map(id => TL.parcels[id] || id).join('; ') : 'no longer on the land') + (e.occupancy.note ? '. ' + e.occupancy.note : '') + '.'));
+
+    if (e.id === 'e1841') {
+      const register = el('details', 'tlparcelregister');
+      register.append(el('summary', null, 'Full historic parcel register · ' + histDrawn.length + ' mapped outlines / ' + histParcels.length + ' total references'));
+      register.append(el('p', null, 'The list preserves every plan reference, including entries without drawable outlines. A plan reference may combine more than one tithe plot; composite rows are not divided into invented geometries. “Landowner” and “occupier” are the joined apportionment fields, not a modern title-register determination.'));
+      const list = el('div', 'tlregisterlist');
+      histParcels.forEach(p => {
+        const row = el('div', 'tlregisterrow');
+        const ident = el('strong', null, 'Plan ' + (p.label || p.id || 'unread') + ' · tithe plot ' + (p.plot || 'not joined'));
+        const use = el('span', null, (p.use || 'Use not stated') + ' · ' + (p.tarea || (p.area != null ? Number(p.area).toFixed(2) + ' ha (reconstructed area)' : 'Area not stated')));
+        const status = p.rings && p.rings.length ? 'Outline mapped' : (p.status || 'Not placed / unread');
+        const detailText = 'Landowner: ' + (p.owner || 'not joined / composite') + ' · Occupier: ' + (p.occ || 'not joined') + ' · ' + status + (p.src ? ' · ' + p.src : '');
+        row.append(ident, use, el('small', null, detailText)); list.append(row);
+      });
+      register.append(list); body.append(register);
+    }
     if (e.sources && e.sources.length) { body.append(el('div', 'tld', 'Archive records')); const ul = el('ul');
       e.sources.forEach(s => { const li = el('li'), a = el('a', null, s.t); a.href = s.u; a.target = '_blank'; a.rel = 'noopener'; li.append(a); ul.append(li); }); body.append(ul); }
     const nx = el('button', 'tlnext', 'Next event ▸'); nx.type = 'button'; nx.addEventListener('click', () => { dwell = 0.001; }); body.append(nx);
@@ -352,12 +457,16 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   let on = false, playing = false, t = START, idx = 0, last = performance.now(), flashT = 0;
   function setPlaying(p) { playing = p; play.textContent = p ? 'Ⅱ Pause' : '▶ Play'; play.setAttribute('aria-pressed', String(p)); }
   function applyInstant(k) { // state of the world after events 0..k, no animation
-    cur = foldTo(k); curNote = noteFor(k); split = k >= splitIdx;
+    const wasPlan = planMode; cur = foldTo(k); curNote = noteFor(k); split = k >= splitIdx;
+    planMode = k >= histPlanIdx && k < splitIdx; historyInfo = k >= histIdx && k < splitIdx;
+    if (planMode && !wasPlan) W.flyTo('tl_history'); else if (!planMode && wasPlan) W.flyTo('tl_aerial');
     const dem = demIdx >= 0 && k >= demIdx, mod = modIdx >= 0 && k >= modIdx; houseState(dem, mod); setModern(mod, false); syncSoldiers(k, false); flash = null; flashOn = false; redraw(); updateLegend();
   }
   function trigger(i) {
-    const e = EV[i]; currentEvent = i; cur = foldTo(i); curNote = noteFor(i); if (i >= splitIdx) split = true; if (i === 0) { split = false; applyInstant(0); split = false; redraw(); updateLegend(); }
+    const e = EV[i]; currentEvent = i; cur = foldTo(i); curNote = noteFor(i); split = i >= splitIdx;
+    planMode = i >= histPlanIdx && i < splitIdx; historyInfo = i >= histIdx && i < splitIdx; if (i === 0) { split = false; applyInstant(0); split = false; redraw(); updateLegend(); }
     if (i === 0 || i === splitIdx) W.flyTo('tl_aerial');
+    if (i === histPlanIdx || i === histIdx) W.flyTo('tl_history');
     if (e.demolish) { houseState(false, false); demoAt = performance.now(); startDust(); W.flyTo('tl_house'); }
     else if (i === demIdx + 1 && demIdx >= 0) W.flyTo('tl_aerial');
     if (e.modern) { house.visible = false; church.visible = false; rubble.visible = false; setModern(true, true); }
