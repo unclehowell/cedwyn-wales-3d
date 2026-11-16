@@ -83,9 +83,11 @@ export default {
       try { const b=await request.json(); id=typeof b.id==="string"?b.id:id; }
       catch { return json({error:"Invalid JSON"},400,origin); }
     }
-    const text=EVENT_TITLES[id];
-    if(!text) return json({error:"Unknown event ID",received:id,valid:Object.keys(EVENT_TITLES)},404,origin);
-    const cacheKey=new Request("https://cedwyn-voice-cache.invalid/v3/"+encodeURIComponent(id)+"?model=aura1-helios");
+    const title=EVENT_TITLES[id];
+    if(!title) return json({error:"Unknown event ID",received:id,valid:Object.keys(EVENT_TITLES)},404,origin);
+    // Say it as a sentence: the "·" separator is read aloud as "star" by the voice model.
+    const text=title.replace(/(\d)–(\d)/g,"$1 to $2").replace(/\s*·\s*/g,", ").replace(/\bWGR\b/g,"W G R").replace(/\bBP\b/g,"B P");
+    const cacheKey=new Request("https://cedwyn-voice-cache.invalid/v4/"+encodeURIComponent(id)+"?model=aura1-helios");
     const cached=await caches.default.match(cacheKey);
     if(cached) {
       const h=new Headers(cached.headers); h.set("Access-Control-Allow-Origin",origin||"*");
