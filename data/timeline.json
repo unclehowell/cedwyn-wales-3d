@@ -1,0 +1,1068 @@
+{
+  "version": "0.3.0",
+  "start": 1535,
+  "end": 2026.87,
+  "note": "Expanded chronology of the wider Tŷ Mawr / Great House Farm landscape. The four modern overlay polygons are schematic anchors for the later Parcel A / Parcel B, woodland and village-green title story. A separate historic layer now displays 44 mapped outlines from 59 identified c.1824 estate-plan references; 15 are unread or not placed, and some outlines combine or split tithe plots. The c.1841 tithe apportionment is a distinct record of 36 Williams occupation entries across about 119 acres; its count is not a one-to-one match with the 59 plan references. Off-map lordship and wider estate interests are narrated separately, not falsely fitted to the mapped polygons. Colour states identify parties/interests in dated sources, not judicial findings of freehold. Family occupation is a separate track from registered title.",
+  "parcels": {
+    "AN": "A1 · North wood",
+    "AM": "A2 · House, yard and buildings",
+    "A3": "Separate green · VG41 (outside Parcel A)",
+    "B": "Parcel B · East fields",
+    "A": "Parcel A · composite 1877 house/woodland parcel (approximate)",
+    "A3go": "A3go · Garden and orchard (not separately mapped)",
+    "R": "Great House / Tŷ Mawr root holding (historical unit; off-map)",
+    "M": "Llandough manorial lordship (off-map legal interest)",
+    "X": "Other Leckwith and estate lands (off-map; link to site unproved)"
+  },
+  "holders": {
+    "unknown": {
+      "short": "No parcel-level title assigned",
+      "col": "#8b929d"
+    },
+    "bute": {
+      "short": "Bute Estate / retained interest",
+      "col": "#d9a441"
+    },
+    "thomas": {
+      "short": "Daniel Thomas & Son",
+      "col": "#2fb5a8"
+    },
+    "family": {
+      "short": "Williams family · title case",
+      "col": "#4f8cff"
+    },
+    "mountjoy": {
+      "short": "Mountjoy Ltd",
+      "col": "#c98a2b"
+    },
+    "wgr": {
+      "short": "Western Ground Rents Ltd",
+      "col": "#e0453a"
+    },
+    "cardiff": {
+      "short": "Cardiff City Corporation (deed party)",
+      "col": "#9b59d0"
+    },
+    "swbt": {
+      "short": "South Western Brick & Tile (deed party)",
+      "col": "#aa7cda"
+    },
+    "glamorgan": {
+      "short": "Glamorgan County Council (registration authority)",
+      "col": "#f08a24"
+    },
+    "bppt": {
+      "short": "BP Pension Trust",
+      "col": "#6b7a8f"
+    },
+    "bpp": {
+      "short": "BP Properties Ltd · registered proprietor",
+      "col": "#4d5b6e"
+    },
+    "ideal": {
+      "short": "Ideal Homes",
+      "col": "#b58a6a"
+    },
+    "foc": {
+      "short": "Forest of Cardiff",
+      "col": "#2e9e4f"
+    },
+    "owners": {
+      "short": "Church View Close plot owners",
+      "col": "#c9c2b0"
+    },
+    "gold": {
+      "short": "Goldsworthy Homes · partial area",
+      "col": "#8a9b42"
+    }
+  },
+  "events": [
+    {
+      "id": "e1535",
+      "t": 1535.01,
+      "date": "1535",
+      "title": "1535 · Tewkesbury Abbey and the manorial lordship",
+      "category": "Manorial lordship",
+      "status": "dashed",
+      "reason": "historical lordship chain; original instruments not in the current file set",
+      "text": "The older account places the manor of Llandough East under Tewkesbury Abbey. This is the lordship of the manor: rights and jurisdiction attached to the manor, not proof that the Abbey owned the freehold of Great House Farm or every field later occupied by the Williams family.",
+      "sources": [
+        {
+          "t": "Cardiff Records · historical account of the Llandough manors",
+          "u": "https://www.british-history.ac.uk/cardiff-records/vol2/pp444-508"
+        }
+      ]
+    },
+    {
+      "id": "e1543",
+      "t": 1543,
+      "date": "1543",
+      "title": "1543 · the Crown grants the manorial interest",
+      "category": "Manorial lordship",
+      "status": "dashed",
+      "reason": "secondary historical chronology; grant not inspected",
+      "text": "After the Dissolution, the manor is recorded in a Crown grant to Lord Clynton and Say and Robert Turwitt. This is a link in the lordship story. It does not establish a transfer of the Great House freehold.",
+      "sources": [
+        {
+          "t": "Cardiff Records · historical account of the Llandough manors",
+          "u": "https://www.british-history.ac.uk/cardiff-records/vol2/pp444-508"
+        }
+      ]
+    },
+    {
+      "id": "e1545",
+      "t": 1545,
+      "date": "1545",
+      "title": "1545 · Sir George Herbert and the Llandough manor",
+      "category": "Manorial lordship",
+      "status": "dashed",
+      "reason": "historical chronology; original conveyance not inspected",
+      "text": "The manorial sequence places Sir George Herbert in the lordship of Llandough East. The manor then passed through the Herbert family for several generations. The manorial interest remains a separate strand from the farmhouse and its freehold.",
+      "sources": [
+        {
+          "t": "Cardiff Records · historical account of the Llandough manors",
+          "u": "https://www.british-history.ac.uk/cardiff-records/vol2/pp444-508"
+        }
+      ]
+    },
+    {
+      "id": "e1547",
+      "t": 1547,
+      "date": "1547",
+      "title": "1547 · a separate Herbert–Vaughan lease is recorded",
+      "category": "Third-party lease · identity unresolved",
+      "status": "dashed",
+      "reason": "place-name connection not established",
+      "text": "A separate record is described as a 1,000-year lease from Sir George Herbert to a Vaughan relating to a place written as “Cydwin”. It is not a conveyance of Tŷ Mawr. The connection between Cydwin, Cedfin and Great House Farm has not been established, so this remains a parallel record to investigate rather than a proven link in the farm title.",
+      "sources": [
+        {
+          "t": "Cardiff Records · historical account of the Llandough manors",
+          "u": "https://www.british-history.ac.uk/cardiff-records/vol2/pp444-508"
+        }
+      ]
+    },
+    {
+      "id": "e1667",
+      "t": 1667,
+      "date": "1667",
+      "title": "1667 · the Williams family at Tŷ Mawr",
+      "category": "Family history · acquisition and occupation",
+      "status": "dashed",
+      "reason": "reported in later family testimony and 1988 coverage; contemporaneous 1667 instrument not in the file set",
+      "text": "The Williams family acquired Tŷ Mawr (Great House Farm), Llandough, in 1667 and occupied it across generations until 1988. Mary Williams's 1974 statement and 1988 ITV coverage are part of the source trail. The green figures begin here as a schematic representation of the family's broad occupation of the farm; they do not assert that the later four mapped shapes are a parcel-by-parcel 1667 boundary plan.",
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "Mary (Nancy) Williams’s statement",
+          "u": "https://greathousefarmwiki.wordpress.com/mary-williams-statement/"
+        },
+        {
+          "t": "1988 demolition and family occupation",
+          "u": "https://greathousefarmwiki.wordpress.com/demolition-1988/"
+        }
+      ]
+    },
+    {
+      "id": "e1767",
+      "t": 1767,
+      "date": "By 1767",
+      "title": "By 1767 · the manor passes to Hurst and Jones",
+      "category": "Manorial lordship",
+      "status": "dashed",
+      "reason": "historical chronology; conveyance by marriage not inspected",
+      "text": "The manorial interest passed from the Herbert family through marriage to William Hurst and Calvert Richard Jones. This transfer concerns the lordship of Llandough, not the Williams family's occupation or the freehold of Tŷ Mawr.",
+      "sources": [
+        {
+          "t": "Cardiff Records · historical account of the Llandough manors",
+          "u": "https://www.british-history.ac.uk/cardiff-records/vol2/pp444-508"
+        }
+      ]
+    },
+    {
+      "id": "e1793",
+      "t": 1793,
+      "date": "1793",
+      "title": "1793 · the Earl of Bute acquires the manorial lordship",
+      "category": "Manorial lordship",
+      "status": "dashed",
+      "reason": "archive catalogue and historical account; original instrument not inspected",
+      "text": "The lordship of Llandough is recorded as passing from Hurst and Jones to the Earl of Bute. This is not, by itself, a conveyance of the Great House Farm freehold. Lordship and farm title must not be collapsed into one line.",
+      "sources": [
+        {
+          "t": "Cardiff Records · Llandough manorial presentments and lordship",
+          "u": "https://www.british-history.ac.uk/cardiff-records/vol2/pp444-508"
+        }
+      ]
+    },
+    {
+      "id": "e1824",
+      "t": 1824,
+      "date": "1824",
+      "title": "1824 · plan 19 names “Cedfin or Ty Mawr Farm”",
+      "category": "Estate survey · identity and extent",
+      "status": "solid",
+      "reason": null,
+      "text": "David Stewart's survey of the Bute Glamorgan estates labels plan 19 “Cedfin or Ty Mawr Farm”, with an area of about 107 acres. The wider reconstructed estate plan contains 59 identified plot references, 44 with drawable outlines; these are now shown as a separate historic layer. Fifteen are unread or not placed and remain listed rather than being given invented boundaries. This 1824 plan framework is distinct from the later 1841 tithe apportionment and from the 1877 Parcel A and Parcel B division.",
+      "sources": [
+        {
+          "t": "EV-0211 · David Stewart estate survey, plan 19, 1824",
+          "u": "https://cedwyn.bucklerfamily.estate/research/evidence/ev-0211-db-e-1-plan-19-cedfin-ty-mawr-1824/"
+        },
+        {
+          "t": "59 historic plan references · mapped parcel layer and source notes",
+          "u": "https://cedwyn.bucklerfamily.estate/parcels/"
+        }
+      ]
+    },
+    {
+      "id": "e1841",
+      "t": 1841.4,
+      "date": "c.1841",
+      "title": "1841 · John Williams occupies 36 parcels across Llandough and Leckwith",
+      "category": "Occupation and land tax / tithe record",
+      "status": "solid",
+      "reason": null,
+      "text": "The tithe apportionment lists John Williams as occupier of 36 parcels totalling about 119 acres, 2 roods and 30 perches. Six of those plots are indexed in Leckwith, totalling about 14 acres, 3 roods and 12 perches. The landowner column names the Marquess of Bute for 33 parcels and the glebe of the Revd James Evans for three. This is the clearest wide-area snapshot: Williams occupation across the holding, while the tithe's landowner column records other interests. The map now opens the wider historic plan: 59 identified plan references, 44 drawn outlines and 15 unread or not placed. The outline groups are not one-to-one with the 36 tithe apportionment entries; some combine plots or split one plot into multiple components. Green figures mark Williams occupation; Union Jack standards mark the recorded landowner or estate interest. The apportionment owner column is not itself a modern registered-title determination.",
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0215 · c.1841 tithe apportionment: John Williams and 36 parcels",
+          "u": "https://cedwyn.bucklerfamily.estate/research/evidence/ev-0215-tithe-apportionment-john-williams-c1841/"
+        },
+        {
+          "t": "The 36 parcels · overview",
+          "u": "https://cedwyn.bucklerfamily.estate/parcels/"
+        },
+        {
+          "t": "The 59 plan references · mapped and unmapped entries",
+          "u": "https://cedwyn.bucklerfamily.estate/parcels/"
+        }
+      ]
+    },
+    {
+      "id": "e1877",
+      "t": 1877.3,
+      "date": "1877",
+      "title": "1877 · the farm is divided into Parcel A and Parcel B",
+      "category": "Freehold / estate division · terms still under examination",
+      "status": "dashed",
+      "reason": "agreement not yet inspected; sale or quarry lease remains unresolved",
+      "text": "The farm is now shown through the two-part reconstruction: Parcel A, the farmhouse, buildings and north wood (about 10 acres), and Parcel B, the eastern fields (about 9 acres). The earlier 36-plot and wider plan layer contracts to this smaller mapped farm footprint. The Bute Estate and Daniel Thomas & Son are linked to the transaction, but the instrument is not in hand and it is not yet settled whether the arrangement was a sale, quarry lease or a combination. The green south of the house is outside Parcel A; it is shown separately as VG41/A3. Williams occupation continues across the wider farm at this stage, while the title and tenancy instruments begin to diverge between A and B.",
+      "set": {
+        "AN": [
+          "thomas",
+          "dashed"
+        ],
+        "AM": [
+          "thomas",
+          "dashed"
+        ],
+        "B": [
+          "bute",
+          "solid"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0006 · 1877 Bute–Daniel Thomas & Son agreement",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0006-bute-thomas-agreement-1877/"
+        },
+        {
+          "t": "EV-0291 · NLW Bute Estate catalogue D153, Llandough limeworks land",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0291-nlw-bute-catalogue-d153-llandough-33-acres-great-house-farm-limeworks-and-pwllypant-d242-d247-d258/"
+        },
+        {
+          "t": "The Two Parcels · corrected boundary",
+          "u": "https://greathousefarmwiki.wordpress.com/the-two-parcels/"
+        }
+      ]
+    },
+    {
+      "id": "e1916",
+      "t": 1916.4,
+      "date": "1916",
+      "title": "1916 · a Bute yearly agricultural tenancy to the Williams family",
+      "category": "Occupation and tenancy",
+      "status": "solid",
+      "reason": null,
+      "text": "The Court of Appeal later recounts a Bute yearly agricultural tenancy to the Williams family. The surviving plan is understood to concern Parcel B, rather than every one of the 36 tithe plots. A tenancy is a right to occupy on its terms; it is not itself a transfer of the freehold.",
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0014 · Bute tenancy to John Williams, 1916",
+          "u": "https://cedwyn.bucklerfamily.estate/research/evidence/ev-0014-bute-tenancy-john-williams-1916/"
+        },
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        }
+      ]
+    },
+    {
+      "id": "e1926",
+      "t": 1926.5,
+      "date": "1926",
+      "title": "1926 · the remaining Bute estate is reorganised as Mountjoy Ltd",
+      "category": "Corporate estate succession",
+      "status": "solid",
+      "reason": null,
+      "text": "The remaining Bute estate property is incorporated as Mountjoy Ltd. This is the corporate succession shown for the estate interest in Parcel B; it is not a new Williams occupation event.",
+      "set": {
+        "B": [
+          "mountjoy",
+          "solid"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "Glamorgan Archives · DA catalogue, Bute estate history",
+          "u": "https://discovery.nationalarchives.gov.uk/download/GB%200214%20DA_cld"
+        }
+      ]
+    },
+    {
+      "id": "e1928",
+      "t": 1928.5,
+      "date": "1928",
+      "title": "1928 · the last rent receipt and the family's freehold case for Parcel A",
+      "category": "Freehold / title claim and occupation",
+      "status": "dashed",
+      "reason": "family statement and receipt; conveyance deed not held",
+      "text": "The last rent was paid in 1928. The family's title case is that the earlier Parcel A arrangement then left the north wood and farmhouse parcel with the Williams family. The receipt and Mary Williams's statement are evidence in that case; no conveyance deed is presently in the archive. The green (VG41/A3) is outside Parcel A and is not included in this family freehold line. The family continues to occupy the wider farm, including the fields, even though Parcel B follows a separate estate and tenancy line.",
+      "set": {
+        "AN": [
+          "family",
+          "dashed"
+        ],
+        "AM": [
+          "family",
+          "dashed"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0016 · 1928 last rent receipt",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0016-1928-last-rent-receipt-quarrying/"
+        },
+        {
+          "t": "Mary (Nancy) Williams’s statement",
+          "u": "https://greathousefarmwiki.wordpress.com/mary-williams-statement/"
+        }
+      ]
+    },
+    {
+      "id": "e1938",
+      "t": 1938.98,
+      "date": "25 Dec 1938",
+      "title": "1938 · Parcel B is conveyed to Western Ground Rents",
+      "category": "Freehold / conveyance",
+      "status": "solid",
+      "reason": null,
+      "text": "A conveyance dated 25 December 1938 from Mountjoy / Bute to Western Ground Rents Ltd is recited in later WGR instruments and linked to Parcel B. The deed and plan are the key parcel-specific documents; the 1939 tenancy plan that follows shows Parcel B only. This does not convey Parcel A or the house parcel.",
+      "set": {
+        "B": [
+          "wgr",
+          "solid"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0216 · recital of the 25 December 1938 conveyance",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0216-1965-contract-condition-f-conveyance-25-december-1938/"
+        },
+        {
+          "t": "EV-0019 · 1938 Bute–WGR conveyance and plan",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0019-bute-wgr-conveyance-plan-1938/"
+        }
+      ]
+    },
+    {
+      "id": "e1939",
+      "t": 1939.4,
+      "date": "May 1939",
+      "title": "1939 · Western Ground Rents lets Parcel B to John Williams",
+      "category": "Occupation and tenancy",
+      "status": "solid",
+      "reason": null,
+      "text": "The WGR yearly tenancy and plan are associated with John Williams and show Parcel B only. This is a tenancy/occupation instrument, not a conveyance of Parcel B's freehold and not a plan of the whole 36-parcel tithe holding.",
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0023 · 1939 WGR–John Williams tenancy plan",
+          "u": "https://cedwyn.bucklerfamily.estate/research/evidence/ev-0023-1939-wgr-john-williams-tenancy-plan/"
+        }
+      ]
+    },
+    {
+      "id": "e1942",
+      "t": 1942.3,
+      "date": "1940–42",
+      "title": "1942 · about 110 acres of Leckwith Woods are gifted to Cardiff Corporation",
+      "category": "Off-map estate context · land transfer",
+      "status": "dashed",
+      "reason": "secondary source; geographic link to the farm's north wood not established",
+      "text": "A separate gift of about 110 acres of Leckwith woodland to Cardiff Corporation is reported. This is other ground in the wider landscape, not proof that the north wood on the present overlay was included. It is retained here because later records name Cardiff Corporation in connection with woodland title WA735527; the overlap remains an open question.",
+      "sources": [
+        {
+          "t": "EV-0220 · Leckwith Woods gift, 1940–42",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0220-leckwith-woods-wgr-gift-1940-1942/"
+        },
+        {
+          "t": "Cardiff Parks · Leckwith Woods",
+          "u": "https://www.cardiffparks.org.uk/otheropenspaces/leckwithwoods/index.shtml"
+        },
+        {
+          "t": "Woodland & Land-Transfer Assessment, 1902–2005",
+          "u": "https://greathousefarmwiki.wordpress.com/family-legal-case-control-room/woodland-land-transfer-assessment-1902-2005/"
+        }
+      ]
+    },
+    {
+      "id": "e1949",
+      "t": 1949.09,
+      "date": "2 Feb 1949",
+      "title": "1949 · Frederick Buckler takes over the yearly tenancy",
+      "category": "Occupation and tenancy",
+      "status": "solid",
+      "reason": null,
+      "text": "The Court of Appeal records a new yearly agricultural tenancy to Frederick Buckler from 2 February 1949, on the surrender of John Williams's letting. The written agreement was not made. This is a change in the tenancy/occupation account, not a freehold transfer. The family remains on the wider farm.",
+      "occupancy": {
+        "family": [
+          "AN",
+          "AM",
+          "B"
+        ]
+      },
+      "sources": [
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        },
+        {
+          "t": "EV-0023 · 1939 WGR tenancy plan, preceding tenancy",
+          "u": "https://cedwyn.bucklerfamily.estate/research/evidence/ev-0023-1939-wgr-john-williams-tenancy-plan/"
+        }
+      ]
+    },
+    {
+      "id": "e1955",
+      "t": 1955.51,
+      "date": "4 Jul 1955",
+      "title": "1955 · possession is taken of the farm, except the farmhouse and garden",
+      "category": "Court order / possession · not title",
+      "status": "solid",
+      "reason": null,
+      "text": "Order 14 was executed on 4 July 1955. The Court of Appeal later records that possession was taken of every part of the farm except the farmhouse and garden. The family's occupation therefore contracts sharply: the figures move from the wider fields and north wood to the house parcel. The garden/orchard (A3go) is included with the house in the narrative but has no separately traced title or reliable separate polygon. The green VG41 is outside Parcel A; its relationship to the order is not established. A possession order changes possession, not freehold ownership.",
+      "occupancy": {
+        "family": [
+          "AM"
+        ],
+        "note": "House, buildings and garden/orchard only; A3go boundary not separately mapped."
+      },
+      "sources": [
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        },
+        {
+          "t": "EV-0032 · 1955 Order 14 possession order",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0032-1955-order-14-possession-order/"
+        },
+        {
+          "t": "EV-0034 · 1955 writ of possession and execution return",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0034-writ-possession-execution-return-1955/"
+        }
+      ]
+    },
+    {
+      "id": "e1959",
+      "t": 1959.1,
+      "date": "1958–59",
+      "title": "1959 · Mary Williams refuses the offer of a tenancy",
+      "category": "Occupation and tenancy offer",
+      "status": "solid",
+      "reason": null,
+      "text": "The Court of Appeal records that Mary Williams was offered a tenancy of the farmhouse and garden by Western Ground Rents but refused it. The offer did not create an accepted tenancy. The family's occupation of the farmhouse and garden continues in the historical sequence.",
+      "occupancy": {
+        "family": [
+          "AM"
+        ],
+        "note": "Farmhouse and garden; A3go not separately drawn."
+      },
+      "sources": [
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        },
+        {
+          "t": "The 1959 tenancy offer · related chronology",
+          "u": "https://greathousefarmwiki.wordpress.com/the-two-parcels/three-parts-of-parcel-a-divergent-chronologies/"
+        }
+      ]
+    },
+    {
+      "id": "e1961",
+      "t": 1961.24,
+      "date": "29 Mar 1961",
+      "title": "1961 · a WGR, brick-and-tile and Cardiff Corporation deed is recorded against the woodland title",
+      "category": "Woodland title / deed and rights unresolved",
+      "status": "solid",
+      "reason": null,
+      "text": "A deed dated 29 March 1961 between Western Ground Rents Ltd, South Western Brick & Tile Company Ltd and Cardiff City Corporation is listed on title WA735527. The instrument and plan have not been inspected. The named parties do not establish which rights were created, the exact land affected or that Cardiff Corporation received the freehold. This does not change the mapped title state.",
+      "sources": [
+        {
+          "t": "EV-0040 · 29 March 1961 WGR / Brick & Tile / Cardiff deed",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0040-1961-wgr-brick-tile-deed/"
+        },
+        {
+          "t": "EV-0169 · title register WA735527",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0169-wa735527-title-register-september-2026/"
+        }
+      ]
+    },
+    {
+      "id": "e1962",
+      "t": 1962.94,
+      "date": "11 Dec 1962",
+      "title": "1962 · a possession order covers the farmhouse, buildings and garden",
+      "category": "Court order / possession · not title",
+      "status": "solid",
+      "reason": null,
+      "text": "Cardiff County Court made a possession order for the farmhouse, buildings and garden. The Court of Appeal records that nothing was done to enforce it before 1974. The order did not itself convey the freehold. Family occupation of the house parcel continues in the chronology until possession was taken in November 1988.",
+      "occupancy": {
+        "family": [
+          "AM"
+        ],
+        "note": "House, buildings and garden/orchard; occupation persisted while the order remained unenforced."
+      },
+      "sources": [
+        {
+          "t": "EV-0041 · 1962 Cardiff County Court possession order",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0041-cardiff-county-court-possession-order-1962/"
+        },
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        }
+      ]
+    },
+    {
+      "id": "e1965",
+      "t": 1965.17,
+      "date": "2 Mar 1965",
+      "title": "1965 · a further weekly letting is offered to Mrs Buckler",
+      "category": "Occupation and tenancy offer",
+      "status": "solid",
+      "reason": null,
+      "text": "The Court of Appeal records that WGR's agents offered Mrs Buckler a weekly tenancy of the farmhouse in March 1965. The offer was not a freehold conveyance. The written offer and acceptance position remain relevant to the separate possession history.",
+      "occupancy": {
+        "family": [
+          "AM"
+        ],
+        "note": "Farmhouse and garden; no title change."
+      },
+      "sources": [
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        }
+      ]
+    },
+    {
+      "id": "e1969",
+      "t": 1969.99,
+      "date": "31 Dec 1969",
+      "title": "1969 · Western Ground Rents conveys Parcel B to BP Pension Trust",
+      "category": "Freehold / conveyance",
+      "status": "solid",
+      "reason": null,
+      "text": "The 31 December 1969 conveyance from WGR to BP Pension Trust is the recorded conveyance of the WGR fields, Parcel B. For the house, the instrument is described as carrying the benefit of the 1962 possession order; that is not the same as a conveyance of the A2 freehold. The woodland strand remains unresolved against the 1961 deed involving Cardiff Corporation.",
+      "set": {
+        "B": [
+          "bppt",
+          "solid"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AM"
+        ],
+        "note": "The family remains at the farmhouse and garden; title of Parcel B has changed separately."
+      },
+      "sources": [
+        {
+          "t": "EV-0043 · 1969 WGR to BP Pension Trust conveyance",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0043-wgr-bp-pension-trust-conveyance/"
+        },
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        },
+        {
+          "t": "Woodland & Land-Transfer Assessment, 1902–2005",
+          "u": "https://greathousefarmwiki.wordpress.com/family-legal-case-control-room/woodland-land-transfer-assessment-1902-2005/"
+        }
+      ]
+    },
+    {
+      "id": "e1970",
+      "t": 1970.45,
+      "date": "16 Jun 1970",
+      "title": "1970 · the separate green is registered as village green VG41",
+      "category": "Village-green registration · not title",
+      "status": "dashed",
+      "reason": "original VG41 application and map outstanding",
+      "text": "VG41 is registered as a village green on 16 June 1970, with Glamorgan County Council acting as registration authority. The green lies outside Parcel A. Registration does not vest the freehold in the authority and does not prove who owned the underlying soil. The original application, map, ownership section, notices and decision remain open records.",
+      "sources": [
+        {
+          "t": "EV-0044 · VG41 village-green registration, 1970",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0044-vg41-village-green-registration-1970/"
+        },
+        {
+          "t": "Llandough Community Council · village green",
+          "u": "http://www.llandough-cc.co.uk/Pocket_Parks__and__Village_Green_20140.aspx"
+        }
+      ]
+    },
+    {
+      "id": "e1974",
+      "t": 1974.84,
+      "date": "31 Oct 1974",
+      "title": "1974 · BP's licence letters and the legal character of occupation",
+      "category": "Licence / court's possession analysis",
+      "status": "solid",
+      "reason": null,
+      "text": "BP's letters offered Mary permission to remain rent-free. She did not accept them. In the 1987 judgment the Court of Appeal treated the letters as creating a licence for the relevant possession analysis. This is a judicial characterisation of the occupation after the letters, not a conveyance of the farmhouse freehold. The family remained at the house until November 1988.",
+      "occupancy": {
+        "family": [
+          "AM"
+        ],
+        "note": "Family remains in occupation of the farmhouse; the Court of Appeal later characterises the post-letter possession as permissive."
+      },
+      "sources": [
+        {
+          "t": "EV-0080 · BP Properties Ltd v Buckler judgment",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0080-bp-properties-v-buckler-judgment/"
+        },
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        }
+      ]
+    },
+    {
+      "id": "e1982",
+      "t": 1982.91,
+      "date": "30 Nov 1982",
+      "title": "1982 · BP Properties applies to register Parcel B",
+      "category": "Land Registry application",
+      "status": "dashed",
+      "reason": "application file schedule seen; register creation is a separate later step",
+      "text": "The Land Registry file schedule records an application dated 30 November 1982 in the BP Properties chain for the fields title WA231076. An application is a registration step, not a new conveyance from the family. The registered title and its supporting paper chain are considered separately.",
+      "set": {
+        "B": [
+          "bpp",
+          "dashed"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AM"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0170 · title register WA231076",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0170-wa231076-title-register-september-2026/"
+        }
+      ]
+    },
+    {
+      "id": "e1983",
+      "t": 1983.14,
+      "date": "23 Feb 1983",
+      "title": "1983 · BP Properties is first registered for the house parcel",
+      "category": "First registration · not a conveyance from the occupiers",
+      "status": "solid",
+      "reason": null,
+      "text": "Title WA240304 records first registration of the farmhouse parcel in BP Properties Ltd's name on 23 February 1983. Mary Williams was living in the house and died on 26 March 1983 while the registration process was still under examination. No conveyance from the occupiers is recorded in the source set; the registration relies on BP's paper-title chain, including the earlier WGR conveyance and possession order. The entry records registered proprietorship, not a transfer signed by the Williams family.",
+      "set": {
+        "AM": [
+          "bpp",
+          "solid"
+        ]
+      },
+      "occupancy": {
+        "family": [
+          "AM"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0066 · title register WA240304, 1983",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0066-hmlr-wa240304-item-10-register-1983/"
+        },
+        {
+          "t": "EV-0063 · WA240304 Form 1C application",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0063-hmlr-wa240304-item-11-form-1c/"
+        },
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        }
+      ]
+    },
+    {
+      "id": "e1987m",
+      "t": 1987.09,
+      "date": "2 Feb 1987",
+      "title": "1987 · the house and fields titles are amalgamated",
+      "category": "Land Registry title administration · not a land transfer",
+      "status": "solid",
+      "reason": null,
+      "text": "The house title WA240304 is amalgamated into WA231076 on 2 February 1987. The registry process joins titles; it does not itself move the boundary or transfer the land to a new party. The legal appeal about possession is a separate event later that year.",
+      "set": {},
+      "occupancy": {
+        "family": [
+          "AM"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0078 · title amalgamation application and plan, 1987",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0078-1987-title-amalgamation-application-plan/"
+        },
+        {
+          "t": "EV-0170 · title register WA231076",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0170-wa231076-title-register-september-2026/"
+        }
+      ]
+    },
+    {
+      "id": "e1987",
+      "t": 1987.58,
+      "date": "31 Jul 1987",
+      "title": "1987 · the Court of Appeal decides BP Properties v Buckler",
+      "category": "Court judgment · possession, not conveyance",
+      "status": "solid",
+      "reason": null,
+      "text": "BP Properties Ltd v Buckler [1987] EWCA Civ 2 concerns possession of the farmhouse and garden. The appeal was limited to that part of the farm. The judgment analyses the 1916, 1949, 1959, 1962, 1965 and 1974 occupation instruments. It is not a deed of conveyance and does not turn the separate lordship, freehold and tenancy records into one interest.",
+      "set": {},
+      "occupancy": {
+        "family": [
+          "AM"
+        ]
+      },
+      "sources": [
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        },
+        {
+          "t": "EV-0080 · the 1987 judgment",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0080-bp-properties-v-buckler-judgment/"
+        }
+      ]
+    },
+    {
+      "id": "e1988s",
+      "t": 1988.72,
+      "date": "Oct 1988",
+      "title": "1988 · a wider BP portfolio sale does not include the Great House site",
+      "category": "Off-map corporate land sale",
+      "status": "dashed",
+      "reason": "press and company reporting; detailed site schedule not in the archive",
+      "text": "BP Pension Trust is reported to have sold a much wider Welsh land portfolio to Intercontinental Land & Development. The Great House Farm site itself remained in BP Properties Ltd's chain. This is an off-map corporate transaction and is not shown as a parcel transfer here.",
+      "sources": [
+        {
+          "t": "EV-0276 · press chronology for Ideal Homes, Church View Close and Persimmon",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e1988l",
+      "t": 1988.82,
+      "date": "Nov 1988",
+      "title": "1988 · the Land Authority for Wales acquires other Llandough plots",
+      "category": "Off-map public-land transaction",
+      "status": "dashed",
+      "reason": "press reference; parcels not matched to the Great House titles",
+      "text": "Press reporting describes the Land Authority for Wales acquiring plots in Llandough. The plots have not been matched to the Great House Farm title plan, so this is shown as a wider landscape event, not a transfer of A1, A2 or B.",
+      "sources": [
+        {
+          "t": "The National Archives · Welsh Office board papers, WA 9/49",
+          "u": "https://discovery.nationalarchives.gov.uk/"
+        }
+      ]
+    },
+    {
+      "id": "e1988",
+      "t": 1988.93,
+      "date": "29 Nov – 6 Dec 1988",
+      "title": "1988 · possession is taken and Great House Farm is demolished",
+      "category": "Possession and demolition",
+      "status": "solid",
+      "reason": null,
+      "text": "An eviction attempt on 29 April 1988 failed. Possession was taken on 29 November 1988 and the farmhouse was demolished from about 4am on 6 December. The green family figures leave the land at this point. Their movement represents the end of the family's occupation, not the moment of a freehold conveyance.",
+      "set": {
+        "AM": [
+          "bpp",
+          "solid"
+        ]
+      },
+      "occupancy": {
+        "family": []
+      },
+      "demolish": true,
+      "dwell": 10,
+      "sources": [
+        {
+          "t": "BP Properties Ltd v Buckler [1987] EWCA Civ 2",
+          "u": "https://www.bailii.org/ew/cases/EWCA/Civ/1987/2.html"
+        },
+        {
+          "t": "1988 demolition",
+          "u": "https://greathousefarmwiki.wordpress.com/demolition-1988/"
+        },
+        {
+          "t": "EV-0108 · South Wales Echo, 1988",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0108-south-wales-echo-bp-demolition-anger/"
+        }
+      ]
+    },
+    {
+      "id": "e1993",
+      "t": 1993.92,
+      "date": "3 Dec 1993",
+      "title": "1993–94 · the house parcel and fields move to Ideal Homes",
+      "category": "Freehold / development transfer",
+      "status": "dashed",
+      "reason": "deed not held; transaction reconstructed from archaeology and press records",
+      "text": "The house parcel and Parcel B are reported to pass from BP Properties to Ideal Homes for the Church View Close development. The woodland has a separate chain and is not included in this step. The precise conveyance date and deed plan remain to be matched.",
+      "set": {
+        "AM": [
+          "ideal",
+          "dashed"
+        ],
+        "B": [
+          "ideal",
+          "dashed"
+        ]
+      },
+      "sources": [
+        {
+          "t": "GHF-E148 · 1994 Cotswold Archaeology report",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence-library/ghf-e148-1994-cotswold-archaeology-report-condition-18-discharge-and-counsels-opinion/"
+        },
+        {
+          "t": "EV-0276 · Ideal Homes, Church View Close and Persimmon, 1994–96",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e1994b",
+      "t": 1994.3,
+      "date": "1994–96",
+      "title": "1994–96 · Church View Close replaces the farmhouse and fields",
+      "category": "Development and subdivision",
+      "status": "dashed",
+      "reason": "individual completion dates and title plans not all matched",
+      "text": "The house and fields are redeveloped as Church View Close. Today's buildings are displayed as a single modern layer, so the timeline does not pretend to show each new house being built or sold on its own date.",
+      "modern": true,
+      "sources": [
+        {
+          "t": "GHF-E148 · 1994 Cotswold Archaeology report",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence-library/ghf-e148-1994-cotswold-archaeology-report-condition-18-discharge-and-counsels-opinion/"
+        },
+        {
+          "t": "EV-0276 · Church View Close press and sales chronology",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e1994",
+      "t": 1994.86,
+      "date": "10 Nov 1994",
+      "title": "1994 · the north woodland is registered to Forest of Cardiff",
+      "category": "Woodland title / transfer",
+      "status": "dashed",
+      "reason": "transfer deed and plan not inspected; register entry is known",
+      "text": "A transfer dated 10 November 1994 is associated with the north woodland title WA735527; the register shows Forest of Cardiff as proprietor from 25 November 1994. The parcel-level link is the working reconstruction. It remains a separate chain from the house and fields.",
+      "set": {
+        "AN": [
+          "foc",
+          "dashed"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0169 · title register WA735527",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0169-wa735527-title-register-september-2026/"
+        },
+        {
+          "t": "EV-0136 · 10 November 1994 transfer to Forest of Cardiff",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0136-forest-of-cardiff-woodland-transfer-1994/"
+        }
+      ]
+    },
+    {
+      "id": "e1995",
+      "t": 1995.4,
+      "date": "1995–96",
+      "title": "1995 · individual homes at Church View Close are sold",
+      "category": "Freehold / individual plot sales",
+      "status": "dashed",
+      "reason": "press snippets; not every transfer plan matched",
+      "text": "First buyers at Church View Close appear by January 1995, with house sales continuing through 1996. The map colours A2 and B as the developing/individual-home title area at this broad scale; it is not a claim that each house shares one title.",
+      "set": {
+        "AM": [
+          "owners",
+          "dashed"
+        ],
+        "B": [
+          "owners",
+          "dashed"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0276 · Ideal Homes, Church View Close and Persimmon, 1994–96",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e1996p",
+      "t": 1996.4,
+      "date": "Early 1996",
+      "title": "1996 · Persimmon acquires Ideal Homes as a company",
+      "category": "Corporate share purchase · not a land transfer",
+      "status": "dashed",
+      "reason": "company / press reporting; individual title effect not inferred",
+      "text": "Persimmon's acquisition of Ideal Homes is a corporate share transaction. The purchase of a company is not automatically a conveyance of each property it holds. The timeline therefore records the corporate change without repainting the land as though a new deed had transferred every plot.",
+      "set": {},
+      "sources": [
+        {
+          "t": "EV-0276 · Ideal Homes, Church View Close and Persimmon, 1994–96",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e1996h",
+      "t": 1996.75,
+      "date": "By Sep 1996",
+      "title": "1996 · the last Church View Close house is sold",
+      "category": "Freehold / individual plot sales",
+      "status": "dashed",
+      "reason": "press reporting; individual register entries not all matched",
+      "text": "The last house is reported sold by September 1996. Ownership is now divided among individual house titles rather than one undivided farm holding.",
+      "set": {
+        "AM": [
+          "owners",
+          "dashed"
+        ],
+        "B": [
+          "owners",
+          "dashed"
+        ]
+      },
+      "sources": [
+        {
+          "t": "EV-0276 · Ideal Homes, Church View Close and Persimmon, 1994–96",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0276-churchview-close-llandough-ideal-homes-persimmon-1994-1996/"
+        }
+      ]
+    },
+    {
+      "id": "e2005",
+      "t": 2005.5,
+      "date": "2005",
+      "title": "2005 · part of the north woodland is sold to Goldsworthy Homes",
+      "category": "Partial woodland transfer",
+      "status": "solid",
+      "reason": null,
+      "text": "Forest of Cardiff's accounts record a £20,000 sale of land at Leckwith Road, Llandough; a 2005 transfer to Goldsworthy Homes is associated with an excision from title WA735527. The area is not drawn separately, so the map does not recolour the whole north wood as if every part had transferred.",
+      "note": {
+        "AN": "part sold to Goldsworthy Homes; extent not mapped"
+      },
+      "sources": [
+        {
+          "t": "EV-0217 · Forest of Cardiff accounts to 30 June 2006",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0217-forest-cardiff-accounts-2006-sale-of-land-leckwith-road/"
+        },
+        {
+          "t": "EV-0139 · 2005 Forest of Cardiff to Goldsworthy Homes transfer",
+          "u": "https://greathousefarmwiki.wordpress.com/evidence/ev-0139-forest-cardiff-goldsworthy-transfer-excision/"
+        }
+      ]
+    },
+    {
+      "id": "now",
+      "t": 2026.87,
+      "date": "Today",
+      "title": "Today · several parcel and interest questions remain open",
+      "category": "Current register and open questions",
+      "status": "dashed",
+      "reason": "current archive position",
+      "text": "The archive now tells the wider sequence: manor and lordship; the 1824 farm plan; 36 occupied tithe plots; the 1877 division; the family's long occupation and its contraction in 1955; later conveyances, court orders, registrations, development and partial woodland sale. Some modern title numbers and surrounding estate lands have not yet been matched to this map. A blank or dashed area is not evidence of ownership by any party.",
+      "set": {},
+      "sources": []
+    }
+  ]
+}
