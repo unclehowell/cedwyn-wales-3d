@@ -429,7 +429,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const narrationStatus = el('small', 'tlnarrationstatus', 'Helios · British male · ghost guide lip-sync');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
   hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Play the current event headline using the AI narrator';
-  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · Helios · British male AI voice'; });
+  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · ghost guide follows the next narration'; });
   const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Turn automatic narration on or off';
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
