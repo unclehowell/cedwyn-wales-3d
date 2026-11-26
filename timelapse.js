@@ -1,4 +1,4 @@
-// Wales 3D world v0.8.0 — the 1535 → today land, lordship, title and occupation timelapse.
+// Wales 3D world v0.10.0 — the 1535 → today narrated timelapse with a floating, audio-synchronised ghost guide.
 // The 3D world stays a normal, orbitable 3D world; this layer adds a play bar along the top, redraws the family's land
 // parcels on the terrain for each year, shows the archive record for each event in a modal, and loops.
 // Data: timeline.json, family-parcels.geojson and parcels59.json (59 historical plan references; 44 drawn outlines).
@@ -339,11 +339,94 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const parL = el('label', 'tloption'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
   let narrationOn = true, audioUnlocked = false, currentEvent = -1, voiceSequence = 0;
   const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.righteous.workers.dev/speak';
-  const voiceAudio = el('audio'); voiceAudio.id = 'tlvoiceaudio'; voiceAudio.preload = 'none';
+  const voiceAudio = el('audio'); voiceAudio.id = 'tlvoiceaudio'; voiceAudio.preload = 'none'; voiceAudio.crossOrigin = 'anonymous';
   voiceAudio.playsInline = true; voiceAudio.setAttribute('playsinline', ''); voiceAudio.setAttribute('webkit-playsinline', '');
   voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
   root.append(voiceAudio);
-  const narrationStatus = el('small', 'tlnarrationstatus', 'Helios · British male AI voice');
+
+  // ---------- floating spectral tour guide ----------
+  // This is real Three.js geometry in the world, positioned in the camera's near field so it
+  // remains beside the landscape as the visitor orbits. Its mouth is driven by the actual TTS
+  // audio waveform (Web Audio analyser), not by a timer or a decorative speaking loop.
+  const guideLayer = new THREE.Group(); guideLayer.visible = false; scene.add(guideLayer);
+  const guide = new THREE.Group(); guideLayer.add(guide);
+  const ghostMat = new THREE.MeshStandardMaterial({ color: 0xdaf7ff, emissive: 0x55c9e8, emissiveIntensity: 0.38,
+    roughness: 0.3, metalness: 0, transparent: true, opacity: 0.72, depthWrite: false, side: THREE.DoubleSide });
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x76ddff, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide });
+  const faceMat = new THREE.MeshBasicMaterial({ color: 0x102638 });
+  const aura = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), glowMat);
+  aura.scale.set(1.35, 2.0, 0.72); aura.position.y = 0.25; guide.add(aura);
+  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.82, 18, 14), ghostMat);
+  torso.scale.set(1.02, 1.18, 0.68); torso.position.y = 0.18; guide.add(torso);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.88, 1.8, 20, 1), ghostMat);
+  tail.rotation.z = Math.PI; tail.position.y = -1.12; guide.add(tail);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 20, 16), ghostMat);
+  head.position.set(0, 1.43, 0.02); guide.add(head);
+  const armGeo = new THREE.SphereGeometry(0.25, 14, 10);
+  const leftArm = new THREE.Mesh(armGeo, ghostMat); leftArm.scale.set(0.92, 2.45, 0.9);
+  leftArm.position.set(-0.86, 0.35, 0.02); leftArm.rotation.z = -0.55; guide.add(leftArm);
+  const rightArm = new THREE.Mesh(armGeo, ghostMat); rightArm.scale.set(0.92, 2.45, 0.9);
+  rightArm.position.set(0.86, 0.35, 0.02); rightArm.rotation.z = 0.55; guide.add(rightArm);
+  const eyeGeo = new THREE.SphereGeometry(0.085, 10, 8);
+  const leftEye = new THREE.Mesh(eyeGeo, faceMat); leftEye.position.set(-0.22, 1.52, 0.56); guide.add(leftEye);
+  const rightEye = new THREE.Mesh(eyeGeo, faceMat); rightEye.position.set(0.22, 1.52, 0.56); guide.add(rightEye);
+  const guideMouth = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), faceMat);
+  guideMouth.position.set(0, 1.25, 0.585); guideMouth.scale.set(0.18, 0.04, 0.055); guide.add(guideMouth);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.025, 6, 28),
+    new THREE.MeshBasicMaterial({ color: 0x9feeff, transparent: true, opacity: 0.52, depthWrite: false }));
+  halo.rotation.x = Math.PI / 2; halo.position.y = 2.15; guide.add(halo);
+  const guidePhone = matchMedia('(max-width: 700px)').matches;
+  const guideOffset = new THREE.Vector3(guidePhone ? 3.0 : 7.2, guidePhone ? -2.1 : -3.2, guidePhone ? -17 : -23);
+  guide.scale.setScalar(guidePhone ? 0.72 : 0.9);
+
+  let voiceContext = null, voiceAnalyser = null, voiceSource = null, voiceSamples = null;
+  let voiceMeterUnavailable = false, guideLevel = 0;
+  function enableVoiceMeter() {
+    if (voiceMeterUnavailable) return false;
+    if (!voiceContext) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) { voiceMeterUnavailable = true; return false; }
+      try {
+        voiceContext = new AudioCtx();
+        voiceAnalyser = voiceContext.createAnalyser(); voiceAnalyser.fftSize = 256;
+        voiceAnalyser.smoothingTimeConstant = 0.42;
+        voiceSource = voiceContext.createMediaElementSource(voiceAudio);
+        voiceSource.connect(voiceAnalyser); voiceAnalyser.connect(voiceContext.destination);
+        voiceSamples = new Uint8Array(voiceAnalyser.fftSize);
+      } catch (err) {
+        voiceMeterUnavailable = true; console.warn('Ghost guide audio analyser unavailable:', err); return false;
+      }
+    }
+    if (voiceContext.state === 'suspended') voiceContext.resume().catch(err => console.warn('Ghost guide audio context:', err));
+    return !!voiceAnalyser;
+  }
+  function updateGuide(now) {
+    camera.updateMatrixWorld(true);
+    guideLayer.position.copy(guideOffset).applyMatrix4(camera.matrixWorld);
+    guideLayer.quaternion.copy(camera.quaternion);
+    const speaking = !voiceAudio.paused && !voiceAudio.ended;
+    let amplitude = 0;
+    if (speaking && voiceAnalyser && voiceContext && voiceContext.state === 'running') {
+      voiceAnalyser.getByteTimeDomainData(voiceSamples);
+      let sum = 0;
+      for (let i = 0; i < voiceSamples.length; i++) { const v = (voiceSamples[i] - 128) / 128; sum += v * v; }
+      const rms = Math.sqrt(sum / voiceSamples.length);
+      amplitude = Math.max(0, Math.min(1, (rms - 0.012) * 12));
+    } else if (speaking) {
+      // Graceful fallback for browsers without Web Audio: use the real media clock, never an idle loop.
+      amplitude = 0.16 + 0.16 * Math.abs(Math.sin(voiceAudio.currentTime * 14));
+    }
+    guideLevel += (amplitude - guideLevel) * (amplitude > guideLevel ? 0.56 : 0.22);
+    guideMouth.scale.set(0.18 + guideLevel * 0.045, speaking ? 0.035 + guideLevel * 0.27 : 0.035, 0.055);
+    guideMouth.position.y = 1.25 - guideLevel * 0.035;
+    guide.position.y = Math.sin(now * 0.00135) * 0.12;
+    guide.rotation.y = Math.sin(now * 0.00065) * 0.055;
+    guide.rotation.z = Math.sin(now * 0.0009) * 0.035;
+    leftArm.rotation.z = -0.55 + Math.sin(now * 0.0012) * 0.07;
+    rightArm.rotation.z = 0.55 - Math.sin(now * 0.0012) * 0.07;
+  }
+
+  const narrationStatus = el('small', 'tlnarrationstatus', 'Helios · British male · ghost guide lip-sync');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
   hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Play the current event headline using the AI narrator';
   voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · Helios · British male AI voice'; });
@@ -431,6 +514,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   // Calling HTMLMediaElement.play() before awaiting anything preserves mobile user activation.
   function speakHeadline(eventId, force = false) {
     if ((!narrationOn && !force) || !eventId) return;
+    enableVoiceMeter();
     const url = VOICE_ENDPOINT + '?id=' + encodeURIComponent(eventId) + '&v=2';
     narrationStatus.textContent = 'Loading Helios voice…'; hearNowBtn.textContent = '⏳ Loading';
     voiceAudio.pause();
@@ -440,7 +524,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const attempt = voiceAudio.play();
     if (attempt && typeof attempt.then === 'function') {
       attempt.then(() => {
-        narrationStatus.textContent = 'Playing · Helios · British male AI voice'; hearNowBtn.textContent = '🔊 Playing';
+        narrationStatus.textContent = 'Playing · ghost guide speaking in sync'; hearNowBtn.textContent = '🔊 Playing';
       }).catch(err => {
         narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')'; hearNowBtn.textContent = '🔊 Retry';
         console.warn('Timelapse AI audio playback:', err);
@@ -494,7 +578,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     else { setPlaying(false); }
   }
   function setMode(m) {
-    on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; legend.hidden = !m; bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
+    on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; guideLayer.visible = !!m; legend.hidden = !m;
+    if (world.labels) world.labels.forEach(l => { l.visible = !m && W.state.labels; }); bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
     exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1535 → today land, lordship and occupation timelapse';
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
@@ -511,6 +596,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   // ---------- the loop ----------
   function frameTl(now) {
     requestAnimationFrame(frameTl); const dt = Math.min(0.1, (now - last) / 1000); last = now; if (!on) return;
+    updateGuide(now);
+    if (world.labels) world.labels.forEach(l => { l.visible = false; });
     if (playing) {
       if (dwell > 0) { dwell -= dt; if (bar2) bar2.style.transform = `scaleX(${Math.max(0, dwell / dwellTotal)})`;
         if (dwell <= 0) { dwell = 0; if (idx >= EV.length) endOfRun(); } }
@@ -528,7 +615,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   requestAnimationFrame(frameTl);
 
-  window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; } };
+  window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
   if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; if (Q.get('tl') !== 'pause') setPlaying(true); }
 })().catch(e => console.warn('timelapse:', e));
