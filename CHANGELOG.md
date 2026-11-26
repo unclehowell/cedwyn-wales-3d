@@ -1,7 +1,4 @@
 # Changelog — Wales 3D world
-
-| Version | Date | Change |
-|---|---|---|
 | 0.10.0 | 26 Nov 2026 | Restores the preserved 1535–today, 40-event looping historical timelapse and adds a floating spectral guide in the 3D scene. The guide's mouth follows the live narration waveform through Web Audio (with a media-clock fallback), floats beside the camera through the tour, and disappears when the timelapse is exited. Base-world place labels are suppressed during playback to prevent duplicate/stale labels. Mobile transport uses a dedicated full-width timeline row; event titles clear the close control. Voice Worker CORS now includes the production apex domain. No narration requests or AI inference were made for this change. |
 
 
