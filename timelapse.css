@@ -1,4 +1,4 @@
-/* Wales 3D world v0.5.0 — 1877 to today timelapse bar, legend and event modal */
+/* Wales 3D world v0.10.0 — narrated historical timelapse and guided-tour UI */
 #tlbar{position:absolute;top:8px;left:8px;right:8px;z-index:4;display:flex;gap:10px;align-items:center;background:rgba(15,20,30,.78);border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px)}
 #w3d.tl #w3dtop{top:64px}
 #tlbar [hidden],#tllegend[hidden]{display:none!important}
@@ -259,6 +259,7 @@
   #tlbar .tltick{height:46px;width:30px;min-height:46px;min-width:30px;margin-left:-15px}
   #tlbar .tltick::after{left:13px;top:11px;height:24px}
   #tlmodal{padding:10px 64px 10px 11px;max-height:30dvh}
+  #w3d.tl #w3dtop{top:122px;left:6px;right:6px;gap:5px}
 }
 @media(max-width:360px){
   #tlbar{grid-template-columns:54px 58px 4.5ch 68px;gap:4px}
