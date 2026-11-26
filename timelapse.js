@@ -375,14 +375,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const halo = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.025, 6, 28),
     new THREE.MeshBasicMaterial({ color: 0x9feeff, transparent: true, opacity: 0.52, depthWrite: false }));
   halo.rotation.x = Math.PI / 2; halo.position.y = 2.15; guide.add(halo);
-  let guidePhone = false;
+  let guidePhone = matchMedia('(max-width: 700px)').matches;
   const guideOffset = new THREE.Vector3();
-  function resizeGuide() {
-    guidePhone = matchMedia('(max-width: 700px)').matches;
-    guideOffset.set(guidePhone ? 3.0 : 7.2, guidePhone ? -2.1 : -3.2, guidePhone ? -17 : -23);
-    guide.scale.setScalar(guidePhone ? 0.72 : 0.9);
-  }
-  resizeGuide(); addEventListener('resize', resizeGuide);
+  addEventListener('resize', () => { guidePhone = matchMedia('(max-width: 700px)').matches; });
 
   let voiceContext = null, voiceAnalyser = null, voiceSource = null, voiceSamples = null;
   let voiceMeterUnavailable = false, guideLevel = 0;
@@ -406,6 +401,13 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     return !!voiceAnalyser;
   }
   function updateGuide(now) {
+    // Keep the guide just beyond the camera near plane, scaling with the view so it remains
+    // visible both in the close farmhouse view and in the high, whole-estate overview.
+    const distance = Math.max(23, camera.near + 15);
+    const halfHeight = distance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
+    const halfWidth = halfHeight * camera.aspect;
+    guideOffset.set(halfWidth * (guidePhone ? 0.65 : 0.48), -halfHeight * 0.32, -distance);
+    guide.scale.setScalar(halfHeight * 0.085);
     camera.updateMatrixWorld(true);
     guideLayer.position.copy(guideOffset).applyMatrix4(camera.matrixWorld);
     guideLayer.quaternion.copy(camera.quaternion);
