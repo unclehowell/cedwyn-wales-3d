@@ -634,4 +634,10 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
   if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; if (Q.get('tl') !== 'pause') setPlaying(true); }
-})().catch(e => console.warn('timelapse:', e));
+})().catch(e => {
+  console.warn('timelapse:', e);
+  const info = document.querySelector('#w3dinfo');
+  if (info) info.textContent = 'The guided timeline could not start: ' + (e && e.message ? e.message : String(e));
+  const root = document.querySelector('#w3d');
+  if (root) root.dataset.timelapseError = String(e && e.stack || e);
+});
