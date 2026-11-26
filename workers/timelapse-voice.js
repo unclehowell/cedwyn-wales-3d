@@ -1,4 +1,4 @@
-// Cedwyn Wales 3D timelapse ElevenLabs v3 neural narration endpoint.
+// Cedwyn Wales 3D timelapse Deepgram Aura Helios narration endpoint.
 const EVENT_TITLES = {
   "e1535":"1535 · Tewkesbury Abbey and the manorial lordship",
   "e1543":"1543 · the Crown grants the manorial interest",
@@ -45,7 +45,9 @@ const MODEL = "@cf/deepgram/aura-1";
 const SPEAKER = "helios";
 const ALLOWED_ORIGINS = new Set([
   "https://feature-timelapse-1877-prese.cedwyn-wales-3d.pages.dev",
-  "https://cedwyn-wales-3d.pages.dev"
+  "https://cedwyn-wales-3d.pages.dev",
+  "https://bucklerfamily.estate",
+  "https://www.bucklerfamily.estate"
 ]);
 function headers(origin, extra={}) {
   return {
