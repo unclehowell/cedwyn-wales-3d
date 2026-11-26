@@ -375,9 +375,14 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const halo = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.025, 6, 28),
     new THREE.MeshBasicMaterial({ color: 0x9feeff, transparent: true, opacity: 0.52, depthWrite: false }));
   halo.rotation.x = Math.PI / 2; halo.position.y = 2.15; guide.add(halo);
-  const guidePhone = matchMedia('(max-width: 700px)').matches;
-  const guideOffset = new THREE.Vector3(guidePhone ? 3.0 : 7.2, guidePhone ? -2.1 : -3.2, guidePhone ? -17 : -23);
-  guide.scale.setScalar(guidePhone ? 0.72 : 0.9);
+  let guidePhone = false;
+  const guideOffset = new THREE.Vector3();
+  function resizeGuide() {
+    guidePhone = matchMedia('(max-width: 700px)').matches;
+    guideOffset.set(guidePhone ? 3.0 : 7.2, guidePhone ? -2.1 : -3.2, guidePhone ? -17 : -23);
+    guide.scale.setScalar(guidePhone ? 0.72 : 0.9);
+  }
+  resizeGuide(); addEventListener('resize', resizeGuide);
 
   let voiceContext = null, voiceAnalyser = null, voiceSource = null, voiceSamples = null;
   let voiceMeterUnavailable = false, guideLevel = 0;
@@ -510,7 +515,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function closeModal() { modal.hidden = true; modalIdx = -1; dwell = 0; }
 
-  // Play a same-origin-style audio URL directly from the user's tap.
+  // Play the CORS-enabled voice Worker audio directly from the user's tap.
   // Calling HTMLMediaElement.play() before awaiting anything preserves mobile user activation.
   function speakHeadline(eventId, force = false) {
     if ((!narrationOn && !force) || !eventId) return;
