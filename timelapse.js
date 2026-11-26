@@ -433,9 +433,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     rightArm.rotation.z = 0.55 - Math.sin(now * 0.0012) * 0.07;
   }
 
-  const narrationStatus = el('small', 'tlnarrationstatus', 'Helios · British male · ghost guide lip-sync');
+  const narrationStatus = el('small', 'tlnarrationstatus', 'Tap Hear to enable narration · ghost guide follows the audio');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
-  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Play the current event headline using the AI narrator';
+  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Enable narration and play the current event headline';
   voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · ghost guide follows the next narration'; });
   const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Turn automatic narration on or off';
@@ -538,7 +538,16 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       });
     }
   }
-  function narrateHeadline(eventId) { speakHeadline(eventId); }
+  function narrateHeadline(eventId) {
+    // Do not call the voice Worker just because the page was opened: a cache miss can invoke
+    // Workers AI. The visitor's first explicit Hear/Play gesture unlocks narration for the tour.
+    if (!audioUnlocked) {
+      narrationStatus.textContent = 'Tap Hear to enable narration · the guide will then follow each event';
+      hearNowBtn.textContent = '🔊 Hear';
+      return;
+    }
+    speakHeadline(eventId);
+  }
   function currentHeadlineId() {
     if (currentEvent >= 0) return EV[currentEvent].id;
     const next = EV.find(e => e.t >= t - 0.01);
@@ -579,7 +588,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; closeModal(); applyInstant(k);
     if (k < splitIdx) { split = false; redraw(); updateLegend(); }
   }
-  function seekEvent(i) { audioUnlocked = true; if (!on) setMode(true); closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  function seekEvent(i) { if (!on) setMode(true); closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
   function endOfRun() {
     if (loop.checked) { t = START; idx = 0; closeModal(); applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; }
     else { setPlaying(false); }
