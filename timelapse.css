@@ -243,3 +243,27 @@
  #pbox summary{min-height:48px}
  #plist li button{min-width:48px;min-height:48px}
 }
+
+
+/* v0.10.0 — guided-tour layout refinements */
+#tlmodal{padding-right:68px}
+#tlmodal h3{overflow-wrap:anywhere}
+@media(max-width:700px){
+  /* Keep transport controls on the first row and give the chronology the full second row. */
+  #tlbar{grid-template-columns:60px 66px 5ch 74px;grid-template-rows:auto auto;gap:5px;padding:5px}
+  #tlplay{grid-column:1;grid-row:1;min-width:60px}
+  #tlvoice{grid-column:2;grid-row:1;min-width:66px}
+  #tlyear{grid-column:3;grid-row:1;min-width:5ch}
+  #tlmore{grid-column:4;grid-row:1}
+  #tltrack{grid-column:1/-1;grid-row:2;width:100%;min-width:0;height:46px}
+  #tlbar .tltick{height:46px;width:30px;min-height:46px;min-width:30px;margin-left:-15px}
+  #tlbar .tltick::after{left:13px;top:11px;height:24px}
+  #tlmodal{padding:10px 64px 10px 11px;max-height:30dvh}
+}
+@media(max-width:360px){
+  #tlbar{grid-template-columns:54px 58px 4.5ch 68px;gap:4px}
+  #tlplay{min-width:54px}
+  #tlvoice{min-width:58px}
+  #tlmore{min-width:68px}
+  #tlyear{min-width:4.5ch}
+}
