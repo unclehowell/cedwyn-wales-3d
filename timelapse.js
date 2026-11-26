@@ -360,8 +360,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   torso.scale.set(1.02, 1.18, 0.68); torso.position.y = 0.18; guide.add(torso);
   const tail = new THREE.Mesh(new THREE.ConeGeometry(0.88, 1.8, 20, 1), ghostMat);
   tail.rotation.z = Math.PI; tail.position.y = -1.12; guide.add(tail);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 20, 16), ghostMat);
-  head.position.set(0, 1.43, 0.02); guide.add(head);
+  const guideHead = new THREE.Mesh(new THREE.SphereGeometry(0.62, 20, 16), ghostMat);
+  guideHead.position.set(0, 1.43, 0.02); guide.add(guideHead);
   const armGeo = new THREE.SphereGeometry(0.25, 14, 10);
   const leftArm = new THREE.Mesh(armGeo, ghostMat); leftArm.scale.set(0.92, 2.45, 0.9);
   leftArm.position.set(-0.86, 0.35, 0.02); leftArm.rotation.z = -0.55; guide.add(leftArm);
