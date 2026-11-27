@@ -452,7 +452,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const banner = el('button', 'tlbanner'); banner.id = 'tlbanner'; banner.type = 'button'; banner.hidden = true;
   banner.setAttribute('aria-haspopup', 'dialog'); banner.setAttribute('aria-controls', 'tlmodal'); banner.setAttribute('aria-live', 'polite');
   banner.title = 'Open the current historical event record'; root.append(banner);
-  banner.addEventListener('click', () => { if (currentEvent >= 0) showModal(currentEvent, true); });
+  banner.addEventListener('click', () => { if (currentEvent >= 0) { if (playing) setPlaying(false); showModal(currentEvent, true); } });
 
 
   function updateLegend() {
@@ -507,7 +507,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const hearEvent = el('button', 'tlhear', '🔊 Hear this headline'); hearEvent.type = 'button';
     hearEvent.addEventListener('click', () => { audioUnlocked = true; narrationOn = true; speakHeadline(e.id, true); });
     modal.append(hearEvent, narrationStatus);
-    const detail = el('details', 'tleventdetails'); detail.open = false; detail.append(el('summary', null, 'Event details & archive records'));
+    const detail = el('details', 'tleventdetails'); detail.open = true; detail.append(el('summary', null, 'Record details & archive sources'));
     const body = el('div', 'tleventbody'); body.append(el('p', null, e.text));
     const ch = Object.entries(e.set || {}); if (ch.length) body.append(el('p', 'tlch', 'Mapped party / interest: ' + ch.map(entry => TL.parcels[entry[0]] + ' → ' + TL.holders[entry[1][0]].short + ' [' + (entry[1][1] === 'dashed' ? 'reconstructed / not fully established' : 'source seen') + ']').join('; ') + '.'));
     if (e.occupancy && Array.isArray(e.occupancy.family)) body.append(el('p', 'tlch', 'Williams family occupation shown on: ' + (e.occupancy.family.length ? e.occupancy.family.map(id => TL.parcels[id] || id).join('; ') : 'no longer on the land') + (e.occupancy.note ? '. ' + e.occupancy.note : '') + '.'));
@@ -620,7 +620,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
   }
-  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; applyInstant(-1); split = false; redraw(); updateLegend(); } if (idx < EV.length) { const nextIndex = idx; t = EV[nextIndex].t; trigger(nextIndex); idx = nextIndex + 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
+  play.addEventListener('click', () => { audioUnlocked = true; if (!on) setMode(true); if (!playing) { if (t >= END - 0.01 && idx >= EV.length) { t = START; idx = 0; dwell = 0; applyInstant(-1); split = false; redraw(); updateLegend(); } if (dwell <= 0 && idx < EV.length) { const nextIndex = idx; t = EV[nextIndex].t; trigger(nextIndex); idx = nextIndex + 1; } setPlaying(true); last = performance.now(); } else setPlaying(false); });
   exit.addEventListener('click', () => setMode(!on));
   parOn.addEventListener('change', () => { if (on) { ovl.custom = parOn.checked ? custom : () => {}; redraw(); } });
   const trackT = ev => { const r = track.getBoundingClientRect(); return START + Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * (END - START); };
@@ -650,7 +650,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       } else endOfRun();
     }
     year.textContent = Math.floor(t) >= Math.floor(END) ? 'Today' : String(Math.floor(t)); fill.style.width = pct(t) + '%'; head.style.left = pct(t) + '%'; track.setAttribute('aria-valuenow', Math.floor(t));
-    ticks.forEach((b, i) => b.classList.toggle('on', i === modalIdx));
+    ticks.forEach((b, i) => b.classList.toggle('on', i === currentEvent));
     if (flash) { if (now > flash.until) { flash = null; flashOn = false; redraw(); } else if (now - flashT > 380) { flashT = now; flashOn = !flashOn; redraw(); } }
     if (demoAt) { const p = Math.min(1, (now - demoAt) / 4200); setDemo(p); if (p >= 1) demoAt = 0; }
     if (dust.visible) { const q = (now - dustAt) / 6000; if (q >= 1) dust.visible = false; else { for (let i = 0; i < NP; i++) { dpos[i * 3] += dvel[i * 3] * dt; dpos[i * 3 + 1] += dvel[i * 3 + 1] * dt; dpos[i * 3 + 2] += dvel[i * 3 + 2] * dt; }
