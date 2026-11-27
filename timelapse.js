@@ -1,6 +1,6 @@
-// Wales 3D world v0.10.0 — the 1535 → today narrated timelapse with a floating, audio-synchronised ghost guide.
-// The 3D world stays a normal, orbitable 3D world; this layer adds a play bar along the top, redraws the family's land
-// parcels on the terrain for each year, shows the archive record for each event in a modal, and loops.
+// Wales 3D world v0.11.0 — a 5× event-to-event narrated historical tour with a compact record banner.
+// The 3D world stays orbitable. The bottom banner shows only the selected event year and title; tapping it opens
+// the linked event record. Playback jumps directly between catalogued events rather than spending time in empty years.
 // Data: timeline.json, family-parcels.geojson and parcels59.json (59 historical plan references; 44 drawn outlines).
 // Status shown on every event: solid = a record has been seen; dashed = the family's case or a record not yet seen.
 // URL: ?tl=0 starts the normal world with the timelapse off; ?tl=pause opens it paused.
@@ -14,7 +14,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const [W, TL, GJ, HIST] = await Promise.all([ready(), fetch(DATA + 'timeline.json?v=0.8.0').then(r => r.json()), fetch(DATA + 'family-parcels.geojson?v=0.8.0').then(r => r.json()), fetch(DATA + 'parcels59.json?v=0.8.0').then(r => r.json())]);
   const { THREE, scene, camera, controls, world, ovl } = W;
   const root = $('#w3d'); if (!root) return;
-  const EV = TL.events, START = TL.start, END = TL.end, RATE = 3.7; // years of story per second at 1×
+  const EV = TL.events, START = TL.start, END = TL.end;
   const histPlanIdx = EV.findIndex(e => e.id === 'e1824'), histIdx = EV.findIndex(e => e.id === 'e1841');
   const demIdx = EV.findIndex(e => e.demolish), modIdx = EV.findIndex(e => e.modern), splitIdx = EV.findIndex(e => e.id === 'e1877');
 
@@ -333,7 +333,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     b.addEventListener('click', ev => { ev.stopPropagation(); seekEvent(i); }); b.addEventListener('pointerdown', ev => ev.stopPropagation()); track.append(b); return b; });
   track.append(head);
   const ends = el('div'); ends.id = 'tlends'; ends.append(el('span', null, '1535'), el('span', null, 'today')); ends.style.top = '-2px'; track.append(ends);
-  const speed = el('select'); speed.id = 'tlspd'; speed.setAttribute('aria-label', 'Speed'); [['0.5', '½×'], ['1', '1×'], ['2', '2×'], ['4', '4×']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; if (v === '1') o.selected = true; speed.append(o); });
+  const speed = el('select'); speed.id = 'tlspd'; speed.setAttribute('aria-label', 'Speed'); [['1', '1×'], ['2', '2×'], ['4', '4×'], ['5', '5×']].forEach(([v, t]) => { const o = el('option', null, t); o.value = v; if (v === '5') o.selected = true; speed.append(o); });
   const speedL = el('label', 'tloption'); speedL.append(el('span', null, 'Speed'), speed);
   const loopL = el('label', 'tloption'); const loop = el('input'); loop.type = 'checkbox'; loop.checked = true; loopL.append(loop, 'Loop');
   const parL = el('label', 'tloption'); const parOn = el('input'); parOn.type = 'checkbox'; parOn.checked = true; parL.append(parOn, 'Parcels');
@@ -449,6 +449,10 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const layerDetails = $('#w3dctl'); if (layerDetails) layerDetails.open = false;
   const creditDetails = $('#w3dcred'); if (creditDetails) creditDetails.open = false;
   const modal = el('div'); modal.id = 'tlmodal'; modal.hidden = true; modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-live', 'polite'); root.append(modal);
+  const banner = el('button', 'tlbanner'); banner.id = 'tlbanner'; banner.type = 'button'; banner.hidden = true;
+  banner.setAttribute('aria-haspopup', 'dialog'); banner.setAttribute('aria-controls', 'tlmodal'); banner.setAttribute('aria-live', 'polite');
+  banner.title = 'Open the current historical event record'; root.append(banner);
+  banner.addEventListener('click', () => { if (currentEvent >= 0) showModal(currentEvent, true); });
 
 
   function updateLegend() {
@@ -481,8 +485,22 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   // ---------- modal ----------
   let modalIdx = -1, dwell = 0, dwellTotal = 1, bar2 = null;
   function dwellFor(e) { return (e.dwell || (6.5 + e.text.length / 110)) / Number(speed.value); }
-  function showModal(i) {
-    const e = EV[i]; modalIdx = i; modal.hidden = false; modal.className = e.status === 'dashed' ? 'dashed' : ''; modal.replaceChildren();
+  function updateBanner(i) {
+    const e = Number.isInteger(i) && i >= 0 ? EV[i] : null;
+    if (!e) { banner.hidden = true; return; }
+    const yearLabel = e.id === 'now' ? 'Today' : String(Math.floor(e.t));
+    const titleText = e.title.replace(/^(?:By\\s+)?\\d{4}(?:[–-]\\d{2,4})?\\s*·\\s*/, '').replace(/^Today\\s*·\\s*/, '');
+    banner.classList.toggle('dashed', e.status === 'dashed');
+    banner.replaceChildren(
+      el('span', 'tlbanner-year', yearLabel),
+      el('span', 'tlbanner-title', titleText),
+      el('span', 'tlbanner-open', 'View record ›')
+    );
+    banner.setAttribute('aria-label', 'Open ' + e.date + ': ' + e.title);
+    banner.hidden = false;
+  }
+  function showModal(i, open = true) {
+    const e = EV[i]; modalIdx = i; modal.hidden = !open; modal.className = e.status === 'dashed' ? 'dashed' : ''; modal.replaceChildren();
     const x = el('button', 'tlx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closeModal);
     modal.append(x, el('div', 'tld', e.date + (e.category ? ' · ' + e.category : '')), el('h3', null, e.title),
       el('span', 'tlst', e.status === 'dashed' ? 'Reconstructed / source gap' + (e.reason ? ' · ' + e.reason : '') : 'Source record seen'));
@@ -515,7 +533,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     detail.append(body); modal.append(detail);
     bar2 = el('div', 'tlbar2'); modal.append(bar2);
   }
-  function closeModal() { modal.hidden = true; modalIdx = -1; dwell = 0; }
+  function closeModal() { modal.hidden = true; modalIdx = -1; }
 
   // Play the CORS-enabled voice Worker audio directly from the user's tap.
   // Calling HTMLMediaElement.play() before awaiting anything preserves mobile user activation.
@@ -582,10 +600,12 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     else if (i === demIdx + 1 && demIdx >= 0) W.flyTo('tl_aerial');
     if (e.modern) { house.visible = false; church.visible = false; rubble.visible = false; setModern(true, true); }
     const ids = Object.keys(e.set || {}); flash = ids.length ? { ids, until: performance.now() + 2600 } : null; flashOn = !!flash; flashT = performance.now();
-    syncSoldiers(i, true); redraw(); updateLegend(); showModal(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e);
+    syncSoldiers(i, true); redraw(); updateLegend();
+    if (!modal.hidden) closeModal();
+    updateBanner(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e);
   }
   function seek(nt) { // scrub to a year, no modal
-    t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; closeModal(); applyInstant(k);
+    t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; currentEvent = k; closeModal(); updateBanner(k); applyInstant(k);
     if (k < splitIdx) { split = false; redraw(); updateLegend(); }
   }
   function seekEvent(i) { if (!on) setMode(true); closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
@@ -594,7 +614,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     else { setPlaying(false); }
   }
   function setMode(m) {
-    on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; guideLayer.visible = !!m; legend.hidden = !m;
+    on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; guideLayer.visible = !!m; legend.hidden = !m; banner.hidden = !m || currentEvent < 0;
     if (world.labels) world.labels.forEach(l => { l.visible = !m && W.state.labels; }); bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
     exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1535 → today land, lordship and occupation timelapse';
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
@@ -615,10 +635,19 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     updateGuide(now);
     if (world.labels) world.labels.forEach(l => { l.visible = false; });
     if (playing) {
-      if (dwell > 0) { dwell -= dt; if (bar2) bar2.style.transform = `scaleX(${Math.max(0, dwell / dwellTotal)})`;
-        if (dwell <= 0) { dwell = 0; if (idx >= EV.length) endOfRun(); } }
-      else { t = Math.min(END, t + dt * RATE * Number(speed.value)); const e = EV[idx];
-        if (e && t >= e.t) { t = e.t; trigger(idx++); } else if (!e && t >= END) endOfRun(); }
+      if (dwell > 0) {
+        dwell -= dt;
+        if (bar2 && !modal.hidden) bar2.style.transform = `scaleX(${Math.max(0, dwell / dwellTotal)})`;
+        if (dwell <= 0) {
+          dwell = 0;
+          if (idx < EV.length) { t = EV[idx].t; trigger(idx++); }
+          else endOfRun();
+        }
+      } else if (idx < EV.length) {
+        // Event-to-event playback: jump straight to the next dated record. Years with no
+        // timeline entry are never rendered as empty stops or given an artificial dwell.
+        t = EV[idx].t; trigger(idx++);
+      } else endOfRun();
     }
     year.textContent = Math.floor(t) >= Math.floor(END) ? 'Today' : String(Math.floor(t)); fill.style.width = pct(t) + '%'; head.style.left = pct(t) + '%'; track.setAttribute('aria-valuenow', Math.floor(t));
     ticks.forEach((b, i) => b.classList.toggle('on', i === modalIdx));
@@ -633,7 +662,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
 
   window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
-  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; if (Q.get('tl') !== 'pause') setPlaying(true); }
+  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; currentEvent = 0; updateBanner(0); if (Q.get('tl') !== 'pause') setPlaying(true); }
 })().catch(e => {
   console.warn('timelapse:', e);
   const info = document.querySelector('#w3dinfo');
