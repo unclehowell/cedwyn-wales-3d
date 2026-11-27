@@ -1,3 +1,9 @@
+## 0.11.1 — Event narration includes descriptions
+
+- Fixed narration to speak the event year, title and a concise extract from the catalogued event description, rather than the hard-coded headline alone.
+- Passed event narration data from the timeline to the voice Worker and versioned its audio cache to prevent old headline-only clips being replayed.
+- Tracked the deployed voice Worker source in this repository.
+
 # Changelog — Wales 3D world
 
 | Version | Date | Change |
