@@ -537,12 +537,12 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
 
   function briefNarration(value) {
     // Use a short, coherent extract from the event's catalogued description.
-    const clean = String(value || '').replace(/\\s+/g, ' ').trim();
+    const clean = String(value || '').replace(/\s+/g, ' ').trim();
     if (!clean) return '';
     const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
     let out = sentences.slice(0, 2).join(' ').trim();
     if (out.length > 360) {
-      out = out.slice(0, 357).replace(/\\s+\\S*$/, '') + '…';
+      out = out.slice(0, 357).replace(/\s+\S*$/, '') + '…';
     }
     return out;
   }
