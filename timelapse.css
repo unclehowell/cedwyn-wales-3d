@@ -269,7 +269,6 @@
   #tlyear{min-width:4.5ch}
 }
 
-
 /* v0.11.0 — compact bottom event banner; full record opens only on selection */
 #tlbanner{
   position:absolute;left:8px;right:8px;bottom:8px;z-index:8;
