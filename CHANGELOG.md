@@ -1,3 +1,9 @@
+## 0.12.0 — Character guide and narration-locked event rail (27 Nov 2026)
+
+- Replaces the procedural ghost with the user-supplied illustrated character as a floating, camera-facing guide in the 3D world; mouth movement is driven by the live narration waveform.
+- Timeline shows the previous, current and next catalogued event years, with the current year emphasized. Dedicated skip-back and skip-forward controls move between dated events only.
+- Automatic event advancement waits for the current narration audio to finish (or fail) before starting another event. The 5× setting remains the default speed for non-narration dwell; it no longer cuts spoken events short.
+
 ## 0.11.1 — Event narration includes descriptions
 
 - Fixed narration to speak the event year, title and a concise extract from the catalogued event description, rather than the hard-coded headline alone.
