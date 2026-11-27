@@ -325,10 +325,26 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   root.classList.add('tl');
   const bar = el('div'); bar.id = 'tlbar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Timelapse 1535 to today');
   const play = el('button', null, '▶ Play'); play.id = 'tlplay'; play.type = 'button'; play.setAttribute('aria-pressed', 'false'); play.title = 'Play or stop the timelapse (space)';
+  const chronology = el('div'); chronology.id = 'tlchronology'; chronology.setAttribute('aria-label', 'Previous, current and next event years');
+  const previousYear = el('span', 'tlyear-neighbour', '—'); previousYear.id = 'tlprevyear';
   const year = el('span', null, '1535'); year.id = 'tlyear'; year.setAttribute('aria-live', 'off');
+  const nextYear = el('span', 'tlyear-neighbour', '—'); nextYear.id = 'tlnextyear';
+  chronology.append(previousYear, year, nextYear);
+  const skipBack = el('button', 'tlskip', '‹'); skipBack.id = 'tlback'; skipBack.type = 'button'; skipBack.title = 'Skip back one event'; skipBack.setAttribute('aria-label', 'Skip back one event');
+  const skipForward = el('button', 'tlskip', '›'); skipForward.id = 'tlfwd'; skipForward.type = 'button'; skipForward.title = 'Skip forward one event'; skipForward.setAttribute('aria-label', 'Skip forward one event');
   const track = el('div'); track.id = 'tltrack'; track.setAttribute('role', 'slider'); track.setAttribute('aria-label', 'Year'); track.setAttribute('aria-valuemin', START); track.setAttribute('aria-valuemax', Math.floor(END)); track.tabIndex = 0;
   const fill = el('div'); fill.id = 'tlfill'; const head = el('div'); head.id = 'tlhead'; track.append(fill);
   const pct = t => ((t - START) / (END - START) * 100);
+  const yearOf = e => e ? (e.id === 'now' ? 'Today' : String(Math.floor(e.t))) : '—';
+  function updateYearTriplet() {
+    const k = currentEvent;
+    const active = k >= 0 ? EV[k] : EV[0];
+    year.textContent = active ? yearOf(active) : '—';
+    previousYear.textContent = k > 0 ? yearOf(EV[k - 1]) : '—';
+    nextYear.textContent = k >= 0 && k < EV.length - 1 ? yearOf(EV[k + 1]) : (k < 0 && EV.length > 1 ? yearOf(EV[1]) : '—');
+    skipBack.disabled = k <= 0;
+    skipForward.disabled = k >= EV.length - 1;
+  }
   const ticks = EV.map((e, i) => { const b = el('button', 'tltick' + (e.status === 'dashed' ? ' dashed' : '')); b.type = 'button'; b.style.left = pct(e.t) + '%'; b.title = e.title; b.setAttribute('aria-label', e.title);
     b.addEventListener('click', ev => { ev.stopPropagation(); seekEvent(i); }); b.addEventListener('pointerdown', ev => ev.stopPropagation()); track.append(b); return b; });
   track.append(head);
@@ -341,40 +357,25 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.righteous.workers.dev/speak';
   const voiceAudio = el('audio'); voiceAudio.id = 'tlvoiceaudio'; voiceAudio.preload = 'none'; voiceAudio.crossOrigin = 'anonymous';
   voiceAudio.playsInline = true; voiceAudio.setAttribute('playsinline', ''); voiceAudio.setAttribute('webkit-playsinline', '');
-  voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
+  voiceAudio.addEventListener('error', () => { voicePending = false; narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
+  voiceAudio.addEventListener('ended', () => { voicePending = false; if (playing) dwell = 0; });
   root.append(voiceAudio);
 
-  // ---------- floating spectral tour guide ----------
-  // This is real Three.js geometry in the world, positioned in the camera's near field so it
-  // remains beside the landscape as the visitor orbits. Its mouth is driven by the actual TTS
-  // audio waveform (Web Audio analyser), not by a timer or a decorative speaking loop.
+  // ---------- floating illustrated tour guide ----------
+  // The supplied character is a camera-facing plane in the 3D scene. A separate mouth
+  // overlay follows the live TTS waveform, so it only appears to speak when audio is active.
   const guideLayer = new THREE.Group(); guideLayer.visible = false; scene.add(guideLayer);
   const guide = new THREE.Group(); guideLayer.add(guide);
-  const ghostMat = new THREE.MeshStandardMaterial({ color: 0xdaf7ff, emissive: 0x55c9e8, emissiveIntensity: 0.38,
-    roughness: 0.3, metalness: 0, transparent: true, opacity: 0.72, depthWrite: false, side: THREE.DoubleSide });
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x76ddff, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide });
-  const faceMat = new THREE.MeshBasicMaterial({ color: 0x102638 });
-  const aura = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), glowMat);
-  aura.scale.set(1.35, 2.0, 0.72); aura.position.y = 0.25; guide.add(aura);
-  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.82, 18, 14), ghostMat);
-  torso.scale.set(1.02, 1.18, 0.68); torso.position.y = 0.18; guide.add(torso);
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.88, 1.8, 20, 1), ghostMat);
-  tail.rotation.z = Math.PI; tail.position.y = -1.12; guide.add(tail);
-  const guideHead = new THREE.Mesh(new THREE.SphereGeometry(0.62, 20, 16), ghostMat);
-  guideHead.position.set(0, 1.43, 0.02); guide.add(guideHead);
-  const armGeo = new THREE.SphereGeometry(0.25, 14, 10);
-  const leftArm = new THREE.Mesh(armGeo, ghostMat); leftArm.scale.set(0.92, 2.45, 0.9);
-  leftArm.position.set(-0.86, 0.35, 0.02); leftArm.rotation.z = -0.55; guide.add(leftArm);
-  const rightArm = new THREE.Mesh(armGeo, ghostMat); rightArm.scale.set(0.92, 2.45, 0.9);
-  rightArm.position.set(0.86, 0.35, 0.02); rightArm.rotation.z = 0.55; guide.add(rightArm);
-  const eyeGeo = new THREE.SphereGeometry(0.085, 10, 8);
-  const leftEye = new THREE.Mesh(eyeGeo, faceMat); leftEye.position.set(-0.22, 1.52, 0.56); guide.add(leftEye);
-  const rightEye = new THREE.Mesh(eyeGeo, faceMat); rightEye.position.set(0.22, 1.52, 0.56); guide.add(rightEye);
-  const guideMouth = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), faceMat);
-  guideMouth.position.set(0, 1.25, 0.585); guideMouth.scale.set(0.18, 0.04, 0.055); guide.add(guideMouth);
-  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.025, 6, 28),
-    new THREE.MeshBasicMaterial({ color: 0x9feeff, transparent: true, opacity: 0.52, depthWrite: false }));
-  halo.rotation.x = Math.PI / 2; halo.position.y = 2.15; guide.add(halo);
+  const guideTexture = new THREE.TextureLoader().load('data:image/png;base64,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');
+  guideTexture.colorSpace = THREE.SRGBColorSpace;
+  const guideImage = new THREE.Sprite(new THREE.SpriteMaterial({ map: guideTexture, transparent: true, depthTest: false, depthWrite: false }));
+  guideImage.scale.set(2.0, 1.7, 1); guideImage.renderOrder = 10000; guide.add(guideImage);
+  const mouthCanvas = document.createElement('canvas'); mouthCanvas.width = 64; mouthCanvas.height = 32;
+  const mouthContext = mouthCanvas.getContext('2d'); mouthContext.fillStyle = '#09090b';
+  mouthContext.beginPath(); mouthContext.ellipse(32, 16, 29, 14, 0, 0, Math.PI * 2); mouthContext.fill();
+  const mouthTexture = new THREE.CanvasTexture(mouthCanvas); mouthTexture.colorSpace = THREE.SRGBColorSpace;
+  const guideMouth = new THREE.Sprite(new THREE.SpriteMaterial({ map: mouthTexture, transparent: true, depthTest: false, depthWrite: false }));
+  guideMouth.position.set(0.045, 0.075, 0.05); guideMouth.scale.set(0.17, 0.04, 1); guideMouth.renderOrder = 10001; guide.add(guideMouth);
   let guidePhone = matchMedia('(max-width: 700px)').matches;
   const guideOffset = new THREE.Vector3();
   addEventListener('resize', () => { guidePhone = matchMedia('(max-width: 700px)').matches; });
@@ -407,7 +408,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const halfHeight = distance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
     const halfWidth = halfHeight * camera.aspect;
     guideOffset.set(halfWidth * (guidePhone ? 0.65 : 0.48), -halfHeight * 0.32, -distance);
-    guide.scale.setScalar(halfHeight * 0.085);
+    guide.scale.setScalar(halfHeight * 0.2);
     camera.updateMatrixWorld(true);
     guideLayer.position.copy(guideOffset).applyMatrix4(camera.matrixWorld);
     guideLayer.quaternion.copy(camera.quaternion);
@@ -424,25 +425,21 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       amplitude = 0.16 + 0.16 * Math.abs(Math.sin(voiceAudio.currentTime * 14));
     }
     guideLevel += (amplitude - guideLevel) * (amplitude > guideLevel ? 0.56 : 0.22);
-    guideMouth.scale.set(0.18 + guideLevel * 0.045, speaking ? 0.035 + guideLevel * 0.27 : 0.035, 0.055);
-    guideMouth.position.y = 1.25 - guideLevel * 0.035;
-    guide.position.y = Math.sin(now * 0.00135) * 0.12;
-    guide.rotation.y = Math.sin(now * 0.00065) * 0.055;
-    guide.rotation.z = Math.sin(now * 0.0009) * 0.035;
-    leftArm.rotation.z = -0.55 + Math.sin(now * 0.0012) * 0.07;
-    rightArm.rotation.z = 0.55 - Math.sin(now * 0.0012) * 0.07;
+    guideMouth.scale.set(0.17, speaking ? 0.025 + guideLevel * 0.15 : 0.025, 1);
+    guide.position.y = Math.sin(now * 0.00135) * 0.045;
+    guide.rotation.z = Math.sin(now * 0.0009) * 0.018;
   }
 
-  const narrationStatus = el('small', 'tlnarrationstatus', 'Tap Hear to enable narration · ghost guide follows the audio');
+  const narrationStatus = el('small', 'tlnarrationstatus', 'Tap Hear to enable narration · illustrated guide follows the audio');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
-  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Enable narration and play the current event headline';
-  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · ghost guide follows the next narration'; });
+  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Enable narration and play the current event';
+  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · illustrated guide follows the next narration'; });
   const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Turn automatic narration on or off';
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
   const more = el('details'); more.id = 'tlmore'; more.append(el('summary', null, 'Options'));
   const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, exit); more.append(moreBody);
-  bar.append(play, hearNowBtn, year, track, more); root.append(bar);
+  bar.append(play, hearNowBtn, chronology, skipBack, track, skipForward, more); root.append(bar);
   const legend = el('details'); legend.id = 'tllegend'; const legendTitle = el('summary', null, 'Land & standards');
   const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); moreBody.append(legend);
   legend.open = false; more.open = false;
@@ -485,6 +482,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   // ---------- modal ----------
   let modalIdx = -1, dwell = 0, dwellTotal = 1, bar2 = null;
   function dwellFor(e) { return (e.dwell || (6.5 + e.text.length / 110)) / Number(speed.value); }
+  let voicePending = false;
   function updateBanner(i) {
     const e = Number.isInteger(i) && i >= 0 ? EV[i] : null;
     if (!e) { banner.hidden = true; return; }
@@ -558,7 +556,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const summary = event ? briefNarration(event.text || '') : '';
     const params = new URLSearchParams({ id: eventId, year, title, summary, v: '3' });
     const url = VOICE_ENDPOINT + '?' + params.toString();
-    narrationStatus.textContent = 'Loading Helios voice…'; hearNowBtn.textContent = '⏳ Loading';
+    narrationStatus.textContent = 'Loading narration…'; hearNowBtn.textContent = '⏳ Loading';
+    voicePending = true;
     voiceAudio.pause();
     voiceAudio.removeAttribute('src');
     voiceAudio.src = url;
@@ -566,8 +565,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const attempt = voiceAudio.play();
     if (attempt && typeof attempt.then === 'function') {
       attempt.then(() => {
-        narrationStatus.textContent = 'Playing · ghost guide speaking in sync'; hearNowBtn.textContent = '🔊 Playing';
+        narrationStatus.textContent = 'Playing · illustrated guide speaking in sync'; hearNowBtn.textContent = '🔊 Playing';
       }).catch(err => {
+        voicePending = false;
         narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')'; hearNowBtn.textContent = '🔊 Retry';
         console.warn('Timelapse AI audio playback:', err);
       });
@@ -619,21 +619,23 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const ids = Object.keys(e.set || {}); flash = ids.length ? { ids, until: performance.now() + 2600 } : null; flashOn = !!flash; flashT = performance.now();
     syncSoldiers(i, true); redraw(); updateLegend();
     if (!modal.hidden) closeModal();
-    updateBanner(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e);
+    updateBanner(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e); updateYearTriplet();
   }
   function seek(nt) { // scrub to a year, no modal; manual seeking pauses and clears the old event dwell
     if (playing) setPlaying(false); dwell = 0; dwellTotal = 1;
-    t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; currentEvent = k; closeModal(); updateBanner(k); applyInstant(k);
+    t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; currentEvent = k; closeModal(); updateBanner(k); applyInstant(k); updateYearTriplet();
     if (k < splitIdx) { split = false; redraw(); updateLegend(); }
   }
-  function seekEvent(i) { if (!on) setMode(true); if (playing) setPlaying(false); dwell = 0; closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  function seekEvent(i) { if (i < 0 || i >= EV.length) return; if (!on) setMode(true); if (playing) setPlaying(false); dwell = 0; closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  skipBack.addEventListener('click', () => seekEvent(Math.max(0, currentEvent - 1)));
+  skipForward.addEventListener('click', () => seekEvent(Math.min(EV.length - 1, currentEvent + 1)));
   function endOfRun() {
     if (loop.checked) { t = START; idx = 0; closeModal(); applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; }
     else { setPlaying(false); }
   }
   function setMode(m) {
     on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; guideLayer.visible = !!m; legend.hidden = !m; banner.hidden = !m || currentEvent < 0;
-    if (world.labels) world.labels.forEach(l => { l.visible = !m && W.state.labels; }); bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
+    if (world.labels) world.labels.forEach(l => { l.visible = !m && W.state.labels; }); bar.querySelectorAll('#tltrack,#tlchronology,#tlback,#tlfwd,#tlmore').forEach(n => n.hidden = !m);
     exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1535 → today land, lordship and occupation timelapse';
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
@@ -653,7 +655,11 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     updateGuide(now);
     if (world.labels) world.labels.forEach(l => { l.visible = false; });
     if (playing) {
-      if (dwell > 0) {
+      const narrationBusy = narrationOn && audioUnlocked && (voicePending || (!voiceAudio.paused && !voiceAudio.ended));
+      if (narrationBusy) {
+        // 5× controls the normal dwell, but cannot cut off an event's spoken description.
+        dwell = Math.max(dwell, 0.05);
+      } else if (dwell > 0) {
         dwell -= dt;
         if (bar2 && !modal.hidden) bar2.style.transform = `scaleX(${Math.max(0, dwell / dwellTotal)})`;
         if (dwell <= 0) {
@@ -667,7 +673,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
         t = EV[idx].t; trigger(idx++);
       } else endOfRun();
     }
-    year.textContent = Math.floor(t) >= Math.floor(END) ? 'Today' : String(Math.floor(t)); fill.style.width = pct(t) + '%'; head.style.left = pct(t) + '%'; track.setAttribute('aria-valuenow', Math.floor(t));
+    updateYearTriplet(); fill.style.width = pct(t) + '%'; head.style.left = pct(t) + '%'; track.setAttribute('aria-valuenow', Math.floor(t));
     ticks.forEach((b, i) => b.classList.toggle('on', i === currentEvent));
     if (flash) { if (now > flash.until) { flash = null; flashOn = false; redraw(); } else if (now - flashT > 380) { flashT = now; flashOn = !flashOn; redraw(); } }
     if (demoAt) { const p = Math.min(1, (now - demoAt) / 4200); setDemo(p); if (p >= 1) demoAt = 0; }
@@ -678,9 +684,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   requestAnimationFrame(frameTl);
 
-  window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; } };
+  window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; }, get guideVisible() { return guideLayer.visible; }, get guideTextureReady() { return !!(guideTexture.image && guideTexture.image.complete); }, get guideTextureSize() { return guideTexture.image ? [guideTexture.image.naturalWidth, guideTexture.image.naturalHeight] : null; }, get guidePosition() { return guideLayer.position.toArray(); } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
-  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; currentEvent = 0; updateBanner(0); if (Q.get('tl') !== 'pause') setPlaying(true); }
+  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; currentEvent = 0; updateBanner(0); updateYearTriplet(); if (Q.get('tl') !== 'pause') setPlaying(true); }
 })().catch(e => {
   console.warn('timelapse:', e);
   const info = document.querySelector('#w3dinfo');
