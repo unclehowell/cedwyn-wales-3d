@@ -535,12 +535,29 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   function closeModal() { modal.hidden = true; modalIdx = -1; }
 
+  function briefNarration(value) {
+    // Use a short, coherent extract from the event's catalogued description.
+    const clean = String(value || '').replace(/\\s+/g, ' ').trim();
+    if (!clean) return '';
+    const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+    let out = sentences.slice(0, 2).join(' ').trim();
+    if (out.length > 360) {
+      out = out.slice(0, 357).replace(/\\s+\\S*$/, '') + '…';
+    }
+    return out;
+  }
+
   // Play the CORS-enabled voice Worker audio directly from the user's tap.
   // Calling HTMLMediaElement.play() before awaiting anything preserves mobile user activation.
   function speakHeadline(eventId, force = false) {
     if ((!narrationOn && !force) || !eventId) return;
     enableVoiceMeter();
-    const url = VOICE_ENDPOINT + '?id=' + encodeURIComponent(eventId) + '&v=2';
+    const event = EV.find(item => item.id === eventId);
+    const year = event ? (event.id === 'now' ? 'Today' : String(Math.floor(event.t))) : '';
+    const title = event ? event.title.replace(/^(?:By\\s+)?\\d{4}(?:[–-]\\d{2,4})?\\s*·\\s*/, '').replace(/^Today\\s*·\\s*/, '') : '';
+    const summary = event ? briefNarration(event.text || '') : '';
+    const params = new URLSearchParams({ id: eventId, year, title, summary, v: '3' });
+    const url = VOICE_ENDPOINT + '?' + params.toString();
     narrationStatus.textContent = 'Loading Helios voice…'; hearNowBtn.textContent = '⏳ Loading';
     voiceAudio.pause();
     voiceAudio.removeAttribute('src');
