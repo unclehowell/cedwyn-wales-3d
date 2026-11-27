@@ -25,11 +25,13 @@ The local `mirror.yml` is mode-gated. While this app remains `split-repo`, it mu
 
 `SPLIT.json` records the source commit copied at the initial split; it is historical provenance, not a current sync indicator.
 
-## Previews
+## Previews and production deployment
 
-Cloudflare Pages builds this repository itself (project `cedwyn-wales-3d`): `main` at https://cedwyn-wales-3d.pages.dev/ and every
-branch or pull request at `https://<branch>.cedwyn-wales-3d.pages.dev/`, with the link commented on the pull request.
-`preview.yml` is the fallback route (wrangler with the secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`, unset; it stops quietly).
+Cloudflare Pages project `cedwyn-wales-3d` is connected directly to this GitHub repository. **Pushes to `main` deploy production; pushes to feature branches deploy previews.** Preview deployments are enabled for all branches.
+
+For a pull request, Cloudflare Pages posts the preview link as a PR comment. Cloudflare generates the branch hostname (long branch names can be shortened), so use the URL reported by the Pages deployment or its PR comment rather than constructing a hostname from the full Git branch name.
+
+This Git integration is the deployment path. Do not add `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID` repository secrets, or use a second Wrangler-based preview workflow.
 
 ## History before the split
 
