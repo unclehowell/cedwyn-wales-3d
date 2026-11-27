@@ -268,3 +268,33 @@
   #tlmore{min-width:68px}
   #tlyear{min-width:4.5ch}
 }
+
+
+/* v0.11.0 — compact bottom event banner; full record opens only on selection */
+#tlbanner{
+  position:absolute;left:8px;right:8px;bottom:8px;z-index:8;
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;
+  width:calc(100% - 16px);min-height:48px;padding:8px 12px;
+  border:1px solid rgba(190,210,235,.26);border-left:4px solid #9cc7ff;border-radius:9px;
+  background:rgba(12,18,28,.91);color:#f5f7fb;text-align:left;
+  box-shadow:0 4px 18px rgba(0,0,0,.34);backdrop-filter:blur(9px);
+  font:inherit;cursor:pointer;
+}
+#tlbanner[hidden]{display:none!important}
+#tlbanner.dashed{border-left-color:#f0b34a}
+#tlbanner .tlbanner-year{font-size:13px;font-weight:800;letter-spacing:.04em;color:#ffe9a8;white-space:nowrap}
+#tlbanner .tlbanner-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:650;line-height:1.25}
+#tlbanner .tlbanner-open{font-size:12px;font-weight:700;color:#a8d2ff;white-space:nowrap}
+#tlbanner:focus-visible{outline:2px solid #a8d2ff;outline-offset:2px}
+#tlmodal{left:8px;right:8px;bottom:66px;width:auto;max-height:min(66dvh,calc(100dvh - 148px));}
+@media(max-width:700px){
+  #tlbanner{left:6px;right:6px;bottom:6px;width:calc(100% - 12px);min-height:48px;gap:8px;padding:8px 10px}
+  #tlbanner .tlbanner-year{font-size:12px}
+  #tlbanner .tlbanner-title{font-size:13px}
+  #tlbanner .tlbanner-open{font-size:11px}
+  #tlmodal{left:6px;right:6px;bottom:62px;width:auto;max-height:54dvh;min-height:0}
+}
+@media(max-width:360px){
+  #tlbanner{grid-template-columns:auto minmax(0,1fr);gap:6px;padding:7px 9px}
+  #tlbanner .tlbanner-open{display:none}
+}
