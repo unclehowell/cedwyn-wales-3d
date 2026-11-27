@@ -325,10 +325,26 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   root.classList.add('tl');
   const bar = el('div'); bar.id = 'tlbar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Timelapse 1535 to today');
   const play = el('button', null, '▶ Play'); play.id = 'tlplay'; play.type = 'button'; play.setAttribute('aria-pressed', 'false'); play.title = 'Play or stop the timelapse (space)';
+  const chronology = el('div'); chronology.id = 'tlchronology'; chronology.setAttribute('aria-label', 'Previous, current and next event years');
+  const previousYear = el('span', 'tlyear-neighbour', '—'); previousYear.id = 'tlprevyear';
   const year = el('span', null, '1535'); year.id = 'tlyear'; year.setAttribute('aria-live', 'off');
+  const nextYear = el('span', 'tlyear-neighbour', '—'); nextYear.id = 'tlnextyear';
+  chronology.append(previousYear, year, nextYear);
+  const skipBack = el('button', 'tlskip', '‹'); skipBack.id = 'tlback'; skipBack.type = 'button'; skipBack.title = 'Skip back one event'; skipBack.setAttribute('aria-label', 'Skip back one event');
+  const skipForward = el('button', 'tlskip', '›'); skipForward.id = 'tlfwd'; skipForward.type = 'button'; skipForward.title = 'Skip forward one event'; skipForward.setAttribute('aria-label', 'Skip forward one event');
   const track = el('div'); track.id = 'tltrack'; track.setAttribute('role', 'slider'); track.setAttribute('aria-label', 'Year'); track.setAttribute('aria-valuemin', START); track.setAttribute('aria-valuemax', Math.floor(END)); track.tabIndex = 0;
   const fill = el('div'); fill.id = 'tlfill'; const head = el('div'); head.id = 'tlhead'; track.append(fill);
   const pct = t => ((t - START) / (END - START) * 100);
+  const yearOf = e => e ? (e.id === 'now' ? 'Today' : String(Math.floor(e.t))) : '—';
+  function updateYearTriplet() {
+    const k = currentEvent;
+    const active = k >= 0 ? EV[k] : EV[0];
+    year.textContent = active ? yearOf(active) : '—';
+    previousYear.textContent = k > 0 ? yearOf(EV[k - 1]) : '—';
+    nextYear.textContent = k >= 0 && k < EV.length - 1 ? yearOf(EV[k + 1]) : (k < 0 && EV.length > 1 ? yearOf(EV[1]) : '—');
+    skipBack.disabled = k <= 0;
+    skipForward.disabled = k >= EV.length - 1;
+  }
   const ticks = EV.map((e, i) => { const b = el('button', 'tltick' + (e.status === 'dashed' ? ' dashed' : '')); b.type = 'button'; b.style.left = pct(e.t) + '%'; b.title = e.title; b.setAttribute('aria-label', e.title);
     b.addEventListener('click', ev => { ev.stopPropagation(); seekEvent(i); }); b.addEventListener('pointerdown', ev => ev.stopPropagation()); track.append(b); return b; });
   track.append(head);
@@ -341,40 +357,22 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   const VOICE_ENDPOINT = 'https://cedwyn-timelapse-voice.righteous.workers.dev/speak';
   const voiceAudio = el('audio'); voiceAudio.id = 'tlvoiceaudio'; voiceAudio.preload = 'none'; voiceAudio.crossOrigin = 'anonymous';
   voiceAudio.playsInline = true; voiceAudio.setAttribute('playsinline', ''); voiceAudio.setAttribute('webkit-playsinline', '');
-  voiceAudio.addEventListener('error', () => { narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
+  voiceAudio.addEventListener('error', () => { voicePending = false; narrationStatus.textContent = 'Audio failed to load · tap Hear headline to retry'; hearNowBtn.textContent = '🔊 Retry'; });
+  voiceAudio.addEventListener('ended', () => { voicePending = false; if (playing) dwell = 0; });
   root.append(voiceAudio);
 
-  // ---------- floating spectral tour guide ----------
-  // This is real Three.js geometry in the world, positioned in the camera's near field so it
-  // remains beside the landscape as the visitor orbits. Its mouth is driven by the actual TTS
-  // audio waveform (Web Audio analyser), not by a timer or a decorative speaking loop.
+  // ---------- floating illustrated tour guide ----------
+  // The supplied character is a camera-facing plane in the 3D scene. A separate mouth
+  // overlay follows the live TTS waveform, so it only appears to speak when audio is active.
   const guideLayer = new THREE.Group(); guideLayer.visible = false; scene.add(guideLayer);
   const guide = new THREE.Group(); guideLayer.add(guide);
-  const ghostMat = new THREE.MeshStandardMaterial({ color: 0xdaf7ff, emissive: 0x55c9e8, emissiveIntensity: 0.38,
-    roughness: 0.3, metalness: 0, transparent: true, opacity: 0.72, depthWrite: false, side: THREE.DoubleSide });
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x76ddff, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide });
-  const faceMat = new THREE.MeshBasicMaterial({ color: 0x102638 });
-  const aura = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), glowMat);
-  aura.scale.set(1.35, 2.0, 0.72); aura.position.y = 0.25; guide.add(aura);
-  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.82, 18, 14), ghostMat);
-  torso.scale.set(1.02, 1.18, 0.68); torso.position.y = 0.18; guide.add(torso);
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.88, 1.8, 20, 1), ghostMat);
-  tail.rotation.z = Math.PI; tail.position.y = -1.12; guide.add(tail);
-  const guideHead = new THREE.Mesh(new THREE.SphereGeometry(0.62, 20, 16), ghostMat);
-  guideHead.position.set(0, 1.43, 0.02); guide.add(guideHead);
-  const armGeo = new THREE.SphereGeometry(0.25, 14, 10);
-  const leftArm = new THREE.Mesh(armGeo, ghostMat); leftArm.scale.set(0.92, 2.45, 0.9);
-  leftArm.position.set(-0.86, 0.35, 0.02); leftArm.rotation.z = -0.55; guide.add(leftArm);
-  const rightArm = new THREE.Mesh(armGeo, ghostMat); rightArm.scale.set(0.92, 2.45, 0.9);
-  rightArm.position.set(0.86, 0.35, 0.02); rightArm.rotation.z = 0.55; guide.add(rightArm);
-  const eyeGeo = new THREE.SphereGeometry(0.085, 10, 8);
-  const leftEye = new THREE.Mesh(eyeGeo, faceMat); leftEye.position.set(-0.22, 1.52, 0.56); guide.add(leftEye);
-  const rightEye = new THREE.Mesh(eyeGeo, faceMat); rightEye.position.set(0.22, 1.52, 0.56); guide.add(rightEye);
-  const guideMouth = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), faceMat);
-  guideMouth.position.set(0, 1.25, 0.585); guideMouth.scale.set(0.18, 0.04, 0.055); guide.add(guideMouth);
-  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.025, 6, 28),
-    new THREE.MeshBasicMaterial({ color: 0x9feeff, transparent: true, opacity: 0.52, depthWrite: false }));
-  halo.rotation.x = Math.PI / 2; halo.position.y = 2.15; guide.add(halo);
+  const guideTexture = new THREE.TextureLoader().load(new URL('./assets/guide-character.png', import.meta.url).href);
+  guideTexture.colorSpace = THREE.SRGBColorSpace;
+  const guideImage = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.7), new THREE.MeshBasicMaterial({ map: guideTexture, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+  guide.add(guideImage);
+  const mouthMat = new THREE.MeshBasicMaterial({ color: 0x09090b, transparent: true, depthWrite: false });
+  const guideMouth = new THREE.Mesh(new THREE.CircleGeometry(0.085, 24), mouthMat);
+  guideMouth.position.set(0.045, 0.075, 0.035); guideMouth.scale.set(1.0, 0.18, 1); guide.add(guideMouth);
   let guidePhone = matchMedia('(max-width: 700px)').matches;
   const guideOffset = new THREE.Vector3();
   addEventListener('resize', () => { guidePhone = matchMedia('(max-width: 700px)').matches; });
@@ -424,25 +422,21 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
       amplitude = 0.16 + 0.16 * Math.abs(Math.sin(voiceAudio.currentTime * 14));
     }
     guideLevel += (amplitude - guideLevel) * (amplitude > guideLevel ? 0.56 : 0.22);
-    guideMouth.scale.set(0.18 + guideLevel * 0.045, speaking ? 0.035 + guideLevel * 0.27 : 0.035, 0.055);
-    guideMouth.position.y = 1.25 - guideLevel * 0.035;
-    guide.position.y = Math.sin(now * 0.00135) * 0.12;
-    guide.rotation.y = Math.sin(now * 0.00065) * 0.055;
-    guide.rotation.z = Math.sin(now * 0.0009) * 0.035;
-    leftArm.rotation.z = -0.55 + Math.sin(now * 0.0012) * 0.07;
-    rightArm.rotation.z = 0.55 - Math.sin(now * 0.0012) * 0.07;
+    guideMouth.scale.set(1.0, speaking ? 0.18 + guideLevel * 1.55 : 0.18, 1);
+    guide.position.y = Math.sin(now * 0.00135) * 0.045;
+    guide.rotation.z = Math.sin(now * 0.0009) * 0.018;
   }
 
-  const narrationStatus = el('small', 'tlnarrationstatus', 'Tap Hear to enable narration · ghost guide follows the audio');
+  const narrationStatus = el('small', 'tlnarrationstatus', 'Tap Hear to enable narration · illustrated guide follows the audio');
   const hearNowBtn = el('button', 'tlvoicebtn', '🔊 Hear');
-  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Enable narration and play the current event headline';
-  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · ghost guide follows the next narration'; });
+  hearNowBtn.id = 'tlvoice'; hearNowBtn.type = 'button'; hearNowBtn.title = 'Enable narration and play the current event';
+  voiceAudio.addEventListener('ended', () => { hearNowBtn.textContent = '🔊 Hear'; narrationStatus.textContent = 'Ready · illustrated guide follows the next narration'; });
   const narrationBtn = el('button', 'tloptionbtn', 'Auto narration: On'); narrationBtn.type = 'button';
   narrationBtn.title = 'Turn automatic narration on or off';
   const exit = el('button', 'tloptionbtn', 'Exit'); exit.type = 'button'; exit.title = 'Leave the timelapse and return to the normal world';
   const more = el('details'); more.id = 'tlmore'; more.append(el('summary', null, 'Options'));
   const moreBody = el('div'); moreBody.className = 'tlmorebody'; moreBody.append(speedL, loopL, parL, narrationBtn, exit); more.append(moreBody);
-  bar.append(play, hearNowBtn, year, track, more); root.append(bar);
+  bar.append(play, hearNowBtn, chronology, skipBack, track, skipForward, more); root.append(bar);
   const legend = el('details'); legend.id = 'tllegend'; const legendTitle = el('summary', null, 'Land & standards');
   const legendBody = el('div'); legendBody.className = 'tllegendbody'; legend.append(legendTitle, legendBody); moreBody.append(legend);
   legend.open = false; more.open = false;
@@ -485,6 +479,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   // ---------- modal ----------
   let modalIdx = -1, dwell = 0, dwellTotal = 1, bar2 = null;
   function dwellFor(e) { return (e.dwell || (6.5 + e.text.length / 110)) / Number(speed.value); }
+  let voicePending = false;
   function updateBanner(i) {
     const e = Number.isInteger(i) && i >= 0 ? EV[i] : null;
     if (!e) { banner.hidden = true; return; }
@@ -558,7 +553,8 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const summary = event ? briefNarration(event.text || '') : '';
     const params = new URLSearchParams({ id: eventId, year, title, summary, v: '3' });
     const url = VOICE_ENDPOINT + '?' + params.toString();
-    narrationStatus.textContent = 'Loading Helios voice…'; hearNowBtn.textContent = '⏳ Loading';
+    narrationStatus.textContent = 'Loading narration…'; hearNowBtn.textContent = '⏳ Loading';
+    voicePending = true;
     voiceAudio.pause();
     voiceAudio.removeAttribute('src');
     voiceAudio.src = url;
@@ -566,8 +562,9 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const attempt = voiceAudio.play();
     if (attempt && typeof attempt.then === 'function') {
       attempt.then(() => {
-        narrationStatus.textContent = 'Playing · ghost guide speaking in sync'; hearNowBtn.textContent = '🔊 Playing';
+        narrationStatus.textContent = 'Playing · illustrated guide speaking in sync'; hearNowBtn.textContent = '🔊 Playing';
       }).catch(err => {
+        voicePending = false;
         narrationStatus.textContent = 'Tap Hear headline to allow audio (' + (err && err.name ? err.name : 'blocked') + ')'; hearNowBtn.textContent = '🔊 Retry';
         console.warn('Timelapse AI audio playback:', err);
       });
@@ -619,21 +616,23 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const ids = Object.keys(e.set || {}); flash = ids.length ? { ids, until: performance.now() + 2600 } : null; flashOn = !!flash; flashT = performance.now();
     syncSoldiers(i, true); redraw(); updateLegend();
     if (!modal.hidden) closeModal();
-    updateBanner(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e);
+    updateBanner(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e); updateYearTriplet();
   }
   function seek(nt) { // scrub to a year, no modal; manual seeking pauses and clears the old event dwell
     if (playing) setPlaying(false); dwell = 0; dwellTotal = 1;
-    t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; currentEvent = k; closeModal(); updateBanner(k); applyInstant(k);
+    t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; currentEvent = k; closeModal(); updateBanner(k); applyInstant(k); updateYearTriplet();
     if (k < splitIdx) { split = false; redraw(); updateLegend(); }
   }
-  function seekEvent(i) { if (!on) setMode(true); if (playing) setPlaying(false); dwell = 0; closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  function seekEvent(i) { if (i < 0 || i >= EV.length) return; if (!on) setMode(true); if (playing) setPlaying(false); dwell = 0; closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  skipBack.addEventListener('click', () => seekEvent(Math.max(0, currentEvent - 1)));
+  skipForward.addEventListener('click', () => seekEvent(Math.min(EV.length - 1, currentEvent + 1)));
   function endOfRun() {
     if (loop.checked) { t = START; idx = 0; closeModal(); applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; }
     else { setPlaying(false); }
   }
   function setMode(m) {
     on = m; root.classList.toggle('tl', m); stage.visible = m; soldierLayer.visible = !!m; guideLayer.visible = !!m; legend.hidden = !m; banner.hidden = !m || currentEvent < 0;
-    if (world.labels) world.labels.forEach(l => { l.visible = !m && W.state.labels; }); bar.querySelectorAll('#tltrack,#tlyear,#tlmore').forEach(n => n.hidden = !m);
+    if (world.labels) world.labels.forEach(l => { l.visible = !m && W.state.labels; }); bar.querySelectorAll('#tltrack,#tlchronology,#tlback,#tlfwd,#tlmore').forEach(n => n.hidden = !m);
     exit.textContent = m ? 'Exit' : '⏱ Timelapse'; exit.title = m ? 'Leave the timelapse and return to the normal world' : 'Open the 1535 → today land, lordship and occupation timelapse';
     if (m) { ovl.custom = parOn.checked ? custom : () => {}; seek(t); } else { setPlaying(false); closeModal(); ovl.custom = null; world.gate = undefined; bmat().forEach(mm => { mm.opacity = 1; }); W.applyBld(); redraw(); }
     root.classList.toggle('tl', true);
@@ -653,7 +652,11 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     updateGuide(now);
     if (world.labels) world.labels.forEach(l => { l.visible = false; });
     if (playing) {
-      if (dwell > 0) {
+      const narrationBusy = narrationOn && audioUnlocked && (voicePending || (!voiceAudio.paused && !voiceAudio.ended));
+      if (narrationBusy) {
+        // 5× controls the normal dwell, but cannot cut off an event's spoken description.
+        dwell = Math.max(dwell, 0.05);
+      } else if (dwell > 0) {
         dwell -= dt;
         if (bar2 && !modal.hidden) bar2.style.transform = `scaleX(${Math.max(0, dwell / dwellTotal)})`;
         if (dwell <= 0) {
@@ -667,7 +670,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
         t = EV[idx].t; trigger(idx++);
       } else endOfRun();
     }
-    year.textContent = Math.floor(t) >= Math.floor(END) ? 'Today' : String(Math.floor(t)); fill.style.width = pct(t) + '%'; head.style.left = pct(t) + '%'; track.setAttribute('aria-valuenow', Math.floor(t));
+    updateYearTriplet(); fill.style.width = pct(t) + '%'; head.style.left = pct(t) + '%'; track.setAttribute('aria-valuenow', Math.floor(t));
     ticks.forEach((b, i) => b.classList.toggle('on', i === currentEvent));
     if (flash) { if (now > flash.until) { flash = null; flashOn = false; redraw(); } else if (now - flashT > 380) { flashT = now; flashOn = !flashOn; redraw(); } }
     if (demoAt) { const p = Math.min(1, (now - demoAt) / 4200); setDemo(p); if (p >= 1) demoAt = 0; }
@@ -680,7 +683,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
 
   window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
-  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; currentEvent = 0; updateBanner(0); if (Q.get('tl') !== 'pause') setPlaying(true); }
+  if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; currentEvent = 0; updateBanner(0); updateYearTriplet(); if (Q.get('tl') !== 'pause') setPlaying(true); }
 })().catch(e => {
   console.warn('timelapse:', e);
   const info = document.querySelector('#w3dinfo');
