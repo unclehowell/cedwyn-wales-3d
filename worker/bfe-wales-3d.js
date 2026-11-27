@@ -4,7 +4,7 @@
 // within minutes. Nothing else on the zone is touched: the apex router still serves every other path.
 // — Sion's Tab agent
 const VERSION = '1.0.1';
-const SRC = 'https://raw.githubusercontent.com/unclehowell/cedwyn-wales-3d/main/';
+const SRC = 'https://raw.githubusercontent.com/unclehowell/cedwyn-wales-3d/ef93f89dbfd554e8297b22a37dc08be9aa06a1b4/';
 const APEX = 'https://bucklerfamily.estate';
 const BASE = '/wales-3d/';
 const TYPES = { html: 'text/html; charset=utf-8', js: 'application/javascript; charset=utf-8', mjs: 'application/javascript; charset=utf-8',
