@@ -604,11 +604,12 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     if (!modal.hidden) closeModal();
     updateBanner(i); narrateHeadline(e.id); dwellTotal = dwell = dwellFor(e);
   }
-  function seek(nt) { // scrub to a year, no modal
+  function seek(nt) { // scrub to a year, no modal; manual seeking pauses and clears the old event dwell
+    if (playing) setPlaying(false); dwell = 0; dwellTotal = 1;
     t = Math.max(START, Math.min(END, nt)); let k = -1; EV.forEach((e, i) => { if (e.t <= t) k = i; }); idx = k + 1; currentEvent = k; closeModal(); updateBanner(k); applyInstant(k);
     if (k < splitIdx) { split = false; redraw(); updateLegend(); }
   }
-  function seekEvent(i) { if (!on) setMode(true); closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
+  function seekEvent(i) { if (!on) setMode(true); if (playing) setPlaying(false); dwell = 0; closeModal(); applyInstant(i - 1); if (i < splitIdx) { split = false; } t = EV[i].t; idx = i + 1; trigger(i); }
   function endOfRun() {
     if (loop.checked) { t = START; idx = 0; closeModal(); applyInstant(-1); split = false; redraw(); updateLegend(); trigger(0); idx = 1; }
     else { setPlaying(false); }
