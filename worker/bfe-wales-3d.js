@@ -3,7 +3,7 @@
 // Same pattern as bfe-catalogue and bfe-argentina-3d: files come from the repo's main branch (edge-cached 2 min), so a push to main is live
 // within minutes. Nothing else on the zone is touched: the apex router still serves every other path.
 // — Sion's Tab agent
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const SRC = 'https://raw.githubusercontent.com/unclehowell/cedwyn-wales-3d/main/';
 const APEX = 'https://bucklerfamily.estate';
 const BASE = '/wales-3d/';
@@ -37,7 +37,7 @@ export default {
     if (rest.split('/').some(s => s === '..' || s === '.' || s.startsWith('.') && s !== '.well-known') || HIDDEN.has(rest)) return notFound(u.pathname);
     const ext = (rest.split('.').pop() || '').toLowerCase();
     const type = TYPES[ext] || 'application/octet-stream';
-    const up = await fetch(SRC + rest.split('/').map(encodeURIComponent).join('/'), { cf: { cacheTtl: 120, cacheEverything: true } });
+    const up = await fetch(SRC + rest.split('/').map(encodeURIComponent).join('/') + '?v=0.11.1', { cf: { cacheTtl: 120, cacheEverything: true } });
     if (up.status === 404) return notFound(u.pathname);
     if (!up.ok) return new Response('The Wales in 3D files could not be read just now (' + up.status + '). Please try again in a minute.', { status: 502, headers: hdrs('text/plain; charset=utf-8', 0) });
     const maxAge = ext === 'html' ? 60 : 300;
