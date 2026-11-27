@@ -554,7 +554,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     enableVoiceMeter();
     const event = EV.find(item => item.id === eventId);
     const year = event ? (event.id === 'now' ? 'Today' : String(Math.floor(event.t))) : '';
-    const title = event ? event.title.replace(/^(?:By\\s+)?\\d{4}(?:[–-]\\d{2,4})?\\s*·\\s*/, '').replace(/^Today\\s*·\\s*/, '') : '';
+    const title = event ? event.title.replace(/^(?:By\s+)?\d{4}(?:[–-]\d{2,4})?\s*·\s*/, '').replace(/^Today\s*·\s*/, '') : '';
     const summary = event ? briefNarration(event.text || '') : '';
     const params = new URLSearchParams({ id: eventId, year, title, summary, v: '3' });
     const url = VOICE_ENDPOINT + '?' + params.toString();
