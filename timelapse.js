@@ -681,7 +681,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
   }
   requestAnimationFrame(frameTl);
 
-  window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; } };
+  window.__tl = { seek, seekEvent, play: () => { if (!playing) play.click(); }, stop: () => { if (playing) play.click(); }, events: EV, get t() { return t; }, get on() { return on; }, get guideTalking() { return !voiceAudio.paused && !voiceAudio.ended; }, get guideLevel() { return guideLevel; }, get guideVisible() { return guideLayer.visible; }, get guideTextureReady() { return !!(guideTexture.image && guideTexture.image.complete); }, get guideTextureSize() { return guideTexture.image ? [guideTexture.image.naturalWidth, guideTexture.image.naturalHeight] : null; }, get guidePosition() { return guideLayer.position.toArray(); } };
   setMode(Q.get('tl') !== '0'); if (Q.get('tl') === '0') { year.hidden = true; }
   if (on) { applyInstant(-1); split = false; redraw(); updateLegend(); idx = 0; currentEvent = 0; updateBanner(0); updateYearTriplet(); if (Q.get('tl') !== 'pause') setPlaying(true); }
 })().catch(e => {
