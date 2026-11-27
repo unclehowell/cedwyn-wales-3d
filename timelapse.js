@@ -405,7 +405,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const halfHeight = distance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
     const halfWidth = halfHeight * camera.aspect;
     guideOffset.set(halfWidth * (guidePhone ? 0.65 : 0.48), -halfHeight * 0.32, -distance);
-    guide.scale.setScalar(halfHeight * 0.085);
+    guide.scale.setScalar(halfHeight * 0.2);
     camera.updateMatrixWorld(true);
     guideLayer.position.copy(guideOffset).applyMatrix4(camera.matrixWorld);
     guideLayer.quaternion.copy(camera.quaternion);
