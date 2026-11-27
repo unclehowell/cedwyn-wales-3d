@@ -489,7 +489,7 @@ const ready = () => window.__w3d ? Promise.resolve(window.__w3d) : new Promise(r
     const e = Number.isInteger(i) && i >= 0 ? EV[i] : null;
     if (!e) { banner.hidden = true; return; }
     const yearLabel = e.id === 'now' ? 'Today' : String(Math.floor(e.t));
-    const titleText = e.title.replace(/^(?:By\\s+)?\\d{4}(?:[–-]\\d{2,4})?\\s*·\\s*/, '').replace(/^Today\\s*·\\s*/, '');
+    const titleText = e.title.replace(/^(?:By\s+)?\d{4}(?:[–-]\d{2,4})?\s*·\s*/, '').replace(/^Today\s*·\s*/, '');
     banner.classList.toggle('dashed', e.status === 'dashed');
     banner.replaceChildren(
       el('span', 'tlbanner-year', yearLabel),
